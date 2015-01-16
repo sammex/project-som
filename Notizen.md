@@ -1,0 +1,1 @@
+- Amazon-Daten / Daten eines anderen Großkonzerns beziehen?
