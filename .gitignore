@@ -16,6 +16,7 @@ cabal.config
 *.prof
 *.aux
 *.hp
+CODE/SOMC
 
 # Concept files:
 *.art
