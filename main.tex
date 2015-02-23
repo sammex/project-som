@@ -50,11 +50,14 @@
 \fancyhead[C]{Selbstorganisierende Karten \(\bullet\) 2014 / 2015 \(\bullet\) ASG Spez.}
 \fancyfoot[RO,LE]{\thepage}
 
-\usepackage[english,ngerman]{babel}
+\usepackage[english,german]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amsthm,amsfonts}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
+
+\usepackage{texments}
+\usestyle{colorful}
 
 % --- LITTLE TWEAKS ---
 
@@ -99,7 +102,7 @@ Our super duper cool abstract text...
 
 \commonlettrine{J}eder kennt das Gefühl der Leere nach dem Lesen eines Buches. Welches Buch soll man sich als nächstes vornehmen? In dieser Seminarfacharbeit lösen wir dieses Problem: Es geht um Buchempfehlungen mit Hilfe von selbstorganisierenden Karten. Mit diesem mathematischen Prinzip lassen sich Punkt im n-dimensionalem Raum in beliebig viele Gruppen unterteilen, wodurch sich Gruppen von Personen mit ähnlichen Lesevorzügen erstellen lassen. Je nachdem, welche Bücher die Personen bereits gelesen haben, kann somit ein \glqq{}Pool\grqq{} aus Büchern erstellt werden. In unserer Seminarfacharbeit wird vor allem auf die Erstellung des Programms, das Sammeln von Daten dafür und die Anwendung dessen eingegangen.
 
-\section{Mathematische Prinzipien}
+\section{Mathematische Prinzipien der selbstorganisierenden Karte}
 \subsection{Neuronale Netze --- Grundlagen für ein besseres Verständnis}
 
 \commonlettrine{D}ie selbstorganisierende Karte ist vom Prinzip her ein neuronales Netz, welches, anders als \glqq{}normale\grqq{} neuronale Netze (wie z.B. das Backpropagation-Netz), unüberwacht lernt und deren Ergebnisse stark von der Anordnung der Neuronen abhängig sind. Doch was bedeutet das überhaupt? Was ist ein neuronales Netzwerk, was heißt \glqq{}unüberwacht\grqq{} und warum sind die Ausgaben des Netzwerkes von der Anordnung der Neuronen abhängig?
@@ -120,15 +123,30 @@ lautet\footnote{Diese Funktion spiegelt letztendlich den euklidischen Abstand vo
 
 Die selbstorganisierende Karte lernt, indem der Repräsentationspunkt eines Neurons der Kohonenkarte verschoben wird. Dazu gibt man ein Eingabemuster in das Netz ein und verschiebt den Repräsentationspunkt des Gewinnerneurons um einen bestimmten Anteil in Richtung des eingegebenen Punktes. Interessant hierbei ist, dass auch Neuronen in der unmittelbaren Umgebung des Gewinnerneurons in Richtung des eingegebenen Punktes verschoben werden können: Somit können sich die Repräsentationspunkte im Raum auf ähnliche Weise anordnen, wie die Neuronen der Kohonenschicht angeordnet sind.
 
-\section{Anwendung dieser Prinzipien}
+\section{Anwendung der Prinzipien der selbstorganisierenden Karte}
 
-\section{Erklärung / Vorstellung des Programms}
+Natürlich finden die oben beschriebenen Prinzipien auch in der Praxis Anwendung. Besonders, wenn Informationen vorverarbeitet werden müssen, wenn milliarden Datenpunkte zu wenigen tausend umgewandelt werden sollen, sind selbstorganisierende Karten von Bedeutung. Sie gruppieren Daten, um Auffälligkeiten und Muster in der Verteilung dieser aufzudecken. Weil selbstorganisierende Karten jedoch so viele Daten verarbeiten müssen, lohnt es sich auch, diese besonders effizient zu gestalten. Wie kann man also eine selbstorganisierende Karte simulieren, ohne unnötige Rechenzeit zu verbrauchen?
+
+Das wichtigste Stichwort zur Antwort auf diese Frage ist Minimalismus. Unnötige Konstruktionen werden nicht gebraucht, also auch nicht umgesetzt. Daher muss man überlegen, welche Teile der Grundlagen vereinfachbar sind und welche nicht. Zum Beispiel muss man nicht jeden Prototypen als Neuron mit Propagierungs- und Aktivierungsfunktion sehen (da diese ja bei allen Prototypen gleich sind), man muss also nicht einmal ein Netz dieser simulieren. Was ist dann besonders wichtig für die selbstorganisierende Karte?
+
+\begin{enumerate}
+\item Prototypen. Die wichtigsten Informationen, die diese tragen, sind ihre Repräsentationspunkte im mehrdimensionalen Raum und ihre Position im Prototypenraum (also in der Kohonenkarte). Die Datenpunkte, mit denen die Prototypen eine Gruppe bilden, müssen nicht explizit in Verbindung mit den Prototypen gebracht werden, da man diese Verbindung auch nachträglich noch ausrechnen kann.
+\item Die Datenpunkte, da diese natürlich die wichtigsten Informationen enthalten. Sie tragen genauso wie die Prototypen eine Koordinate im mehrdimensionalen Raum.
+\item Eine \(\alpha\)-Funktion (bzw. Alphafunktion). Diese wird benötigt, um klarzustellen, wie stark die Prototypen durch die Datenpunkte beeinflusst werden können. Sie nimmt die Position des Gewinnerprototypen entgegen und ordnet dann jedem Prototypen die beeinflussbarkeit dessen zu.
+\end{enumerate}
+
+Wie zu erkennen ist, ist die selbstorganisierende Karte im Wesen nicht sonderlich kompliziert. Mit wenigen Grundlagen kann man sie also realisieren.
+
+\section{Erklärung und Vorstellung des Programms}
 
 \subsection{Funktionsweise des abstrakten Teils}
 
 \subsection{Erweiterung auf unsere Anwendung / Anpassung des Programms}
 
 \subsection{Anwendung des Programms}
+
+\subsection{Repository des Programms auf BitBucket}
+
 \end{multicols}
 \end{document}
 
