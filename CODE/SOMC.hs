@@ -29,8 +29,12 @@ data Prototype = Prototype {point :: DataPoint, position :: Vec Int} deriving (S
 instance Eq Prototype where
     a == b = position a == position b
 
+-- for more intuitive typing (haha!)
+type Prototypes = [Prototype]
+type DataSet = Set.Set DataPoint
+
 -- MultiDimensional Coordinate System
-data MDCS = MDCS {dataPoints :: Set.Set DataPoint, prototypes :: [Prototype]} deriving (Show)
+data MDCS = MDCS {dataPoints :: DataSet, prototypes :: [Prototype]} deriving (Show)
 
 (-@>) :: [Double] -> [Int] -> Prototype
 (-@>) poi pos = Prototype (Vector.fromList poi)  (Vector.fromList pos)
@@ -51,24 +55,24 @@ data MDCS = MDCS {dataPoints :: Set.Set DataPoint, prototypes :: [Prototype]} de
 absv :: Floating a => Vec a -> a
 absv x = sqrt $ Vector.foldl (\s e -> s + e ^ (2 :: Int)) 0 x
 
-getWinner :: (DataPoint -> DataPoint -> Double) -> [Prototype] -> DataPoint -> Prototype
+getWinner :: (DataPoint -> DataPoint -> Double) -> Prototypes -> DataPoint -> Prototype
 getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
-    \mwinner prot -> if   isNothing (snd winner)
+    \mwinner prot -> if Maybe.isNothing (snd mwinner)
         then (distance dat $ point prot, Just prot)
         else let dist = distance dat $ point prot in if   dist < fst mwinner
                                                      then (dist, Just prot)
                                                      else mwinner
     ) (0, Nothing) $ prlist
 
-updateWinner :: (Vec Int -> Vec Int -> Double) -> [Prototype] -> Prototype -> DataPoint -> [Prototype]
+updateWinner :: (Vec Int -> Vec Int -> Double) -> Prototypes -> Prototype -> DataPoint -> Prototypes
 updateWinner alpha prlist wp wd = map (\x -> x {point = ((wd >- point x) >* (alpha (position wp) (position x))) >+ point x}) prlist
 
 -- updates all prototypes of a MDCS by going through every data point (distance function -> alpha function (winner prototype -> test prototype -> alpha) -> old MDCS -> new MDCS)
-epoch :: (DataPoint -> DataPoint -> Double) -> (Vec Int -> Vec Int -> Double) -> MDCS -> MDCS
-epoch distance alpha mdcs = mdcs {prototypes = Set.foldl (
+epoch :: (DataPoint -> DataPoint -> Double) -> (Vec Int -> Vec Int -> Double) -> MDCS -> Prototypes
+epoch distance alpha mdcs = Set.foldl (
         \upr dat -> let winner = getWinner distance upr dat
                     in  updateWinner alpha upr winner dat
-    ) (prototypes mdcs) (dataPoints mdcs)}
+    ) (prototypes mdcs) (dataPoints mdcs)
 
 -- calculates the euclidean distance between two points
 euclidDistance :: DataPoint -> DataPoint -> Double
@@ -88,7 +92,7 @@ myMDCS :: MDCS
 myMDCS = MDCS (Set.fromList [Vector.singleton (-1.0), Vector.singleton 1.0, Vector.singleton 3.0, Vector.singleton 5.0]) [[0.0] -@> [0], [0.0] -@> [1], [0.0] -@> [2], [0.0] -@> [3]]
 
 epoch10 :: MDCS
-epoch10 = (iterate (epoch euclidDistance (independentAlpha 0.2)) myMDCS) !! 10
+epoch10 = (iterate (\mdcs -> mdcs {prototypes=epoch euclidDistance (independentAlpha 0.2) mdcs}) myMDCS) !! 10
 
 main :: IO ()
 main = print epoch10
