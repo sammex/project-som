@@ -19,6 +19,7 @@
 import qualified Data.Vector as Vector
 import qualified Data.Set as Set
 import qualified Data.Maybe as Maybe
+import qualified Data.List as List
 
 type Vec a = Vector.Vector a
 -- some point in a coordinate system
@@ -55,6 +56,16 @@ data MDCS = MDCS {dataPoints :: DataSet, prototypes :: [Prototype]} deriving (Sh
 absv :: Floating a => Vec a -> a
 absv x = sqrt $ Vector.foldl (\s e -> s + e ^ (2 :: Int)) 0 x
 
+editNth :: (a -> a) -> Int -> [a] -> [a]
+editNth f 0 l = case l of
+		     [] -> []
+                     [x] -> [f x]
+		     (x:xs) -> f x : xs
+editNth f n l = if n < 0 then l else case l of
+		     [] -> []
+                     [x] -> [x]
+		     (x:xs) -> x : editNth f (n-1) l
+
 getWinner :: (DataPoint -> DataPoint -> Double) -> Prototypes -> DataPoint -> Prototype
 getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
     \mwinner prot -> if Maybe.isNothing (snd mwinner)
@@ -73,6 +84,11 @@ epoch distance alpha mdcs = Set.foldl (
         \upr dat -> let winner = getWinner distance upr dat
                     in  updateWinner alpha upr winner dat
     ) (prototypes mdcs) (dataPoints mdcs)
+
+sortToGroups :: (DataPoint -> DataPoint -> Double) -> MDCS -> [DataSet]
+sortToGroups d (MDCS set prots) = Set.foldl (
+		\datslist pnt -> editNth (Set.insert pnt) (Maybe.fromJust $ List.elemIndex (getWinner d prots pnt) prots) datslist
+    ) (replicate (length prots) Set.empty) set
 
 -- calculates the euclidean distance between two points
 euclidDistance :: DataPoint -> DataPoint -> Double
