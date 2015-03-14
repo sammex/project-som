@@ -73,10 +73,10 @@ getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
         else let dist = distance dat $ point prot in if   dist < fst mwinner
                                                      then (dist, Just prot)
                                                      else mwinner
-    ) (0, Nothing) $ prlist
+    ) (0, Nothing) prlist
 
 updateWinner :: (Vec Int -> Vec Int -> Double) -> Prototypes -> Prototype -> DataPoint -> Prototypes
-updateWinner alpha prlist wp wd = map (\x -> x {point = ((wd >- point x) >* (alpha (position wp) (position x))) >+ point x}) prlist
+updateWinner alpha prlist wp wd = map (\x -> x {point = ((wd >- point x) >* alpha (position wp) (position x)) >+ point x}) prlist
 
 -- updates all prototypes of a MDCS by going through every data point (distance function -> alpha function (winner prototype -> test prototype -> alpha) -> old MDCS -> new MDCS)
 epoch :: (DataPoint -> DataPoint -> Double) -> (Vec Int -> Vec Int -> Double) -> MDCS -> Prototypes
@@ -99,16 +99,16 @@ independentAlpha :: Double -> Vec Int -> Vec Int -> Double
 independentAlpha alpha win test = if win == test then alpha else 0.0
 
 printSet :: Show a => Set.Set a -> IO ()
-printSet s = Set.foldl (\i e -> i >> (print e)) (return ()) s
+printSet = Set.foldl (\i e -> i >> print e) (return ())
 
 printList :: Show a => [a] -> IO ()
-printList l = foldl (\i e -> i >> (print e)) (return ()) l
+printList = foldl (\i e -> i >> print e) (return ())
 
 myMDCS :: MDCS
 myMDCS = MDCS (Set.fromList [Vector.singleton (-1.0), Vector.singleton 1.0, Vector.singleton 3.0, Vector.singleton 5.0]) [[0.0] -@> [0], [0.0] -@> [1], [0.0] -@> [2], [0.0] -@> [3]]
 
 epoch10 :: MDCS
-epoch10 = (iterate (\mdcs -> mdcs {prototypes=epoch euclidDistance (independentAlpha 0.2) mdcs}) myMDCS) !! 10
+epoch10 = iterate (\mdcs -> mdcs {prototypes=epoch euclidDistance (independentAlpha 0.2) mdcs}) myMDCS !! 10
 
 main :: IO ()
 main = print epoch10
