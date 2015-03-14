@@ -19,15 +19,15 @@ data MDCS = MDCS {dataPoints :: Set.Set DataPoint, prototypes :: [Prototype]} de
 
 -- add two vectors (result vector has lowest dimension of both arguments)
 (>+) :: Num a => Vec a -> Vec a -> Vec a
-(>+) x y = Vector.zipWith (+) x y
+(>+) = Vector.zipWith (+)
 
 -- subtract two vectors (result vector has lowest dimension of both arguments)
 (>-) :: Num a => Vec a -> Vec a -> Vec a
-(>-) x y = Vector.zipWith (-) x y
+(>-) = Vector.zipWith (-)
 
 -- multiply vector by scalar
 (>*) :: Num a => Vec a -> a -> Vec a
-(>*) x y = Vector.map ((*) y) x
+(>*) x y = Vector.map (y *) x
 
 -- absolute of vector (also known as length)
 absv :: Floating a => Vec a -> a
@@ -35,7 +35,7 @@ absv x = sqrt $ Vector.foldl (\s e -> s + e ^ (2 :: Int)) 0 x
 
 getWinner :: (DataPoint -> DataPoint -> Double) -> [Prototype] -> DataPoint -> Prototype
 getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
-    \mwinner prot -> if   snd mwinner == Nothing
+    \mwinner prot -> if   isNothing (snd winner)
         then (distance dat $ point prot, Just prot)
         else let dist = distance dat $ point prot in if   dist < fst mwinner
                                                      then (dist, Just prot)
