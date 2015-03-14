@@ -58,13 +58,13 @@ absv x = sqrt $ Vector.foldl (\s e -> s + e ^ (2 :: Int)) 0 x
 
 editNth :: (a -> a) -> Int -> [a] -> [a]
 editNth f 0 l = case l of
-		     [] -> []
+                     [] -> []
                      [x] -> [f x]
-		     (x:xs) -> f x : xs
+                     (x:xs) -> f x : xs
 editNth f n l = if n < 0 then l else case l of
-		     [] -> []
+                     [] -> []
                      [x] -> [x]
-		     (x:xs) -> x : editNth f (n-1) l
+                     (x:xs) -> x : editNth f (n-1) l
 
 getWinner :: (DataPoint -> DataPoint -> Double) -> Prototypes -> DataPoint -> Prototype
 getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
@@ -87,7 +87,7 @@ epoch distance alpha mdcs = Set.foldl (
 
 sortToGroups :: (DataPoint -> DataPoint -> Double) -> MDCS -> [DataSet]
 sortToGroups d (MDCS set prots) = Set.foldl (
-		\datslist pnt -> editNth (Set.insert pnt) (Maybe.fromJust $ List.elemIndex (getWinner d prots pnt) prots) datslist
+        \datslist pnt -> editNth (Set.insert pnt) (Maybe.fromJust $ List.elemIndex (getWinner d prots pnt) prots) datslist
     ) (replicate (length prots) Set.empty) set
 
 -- calculates the euclidean distance between two points
