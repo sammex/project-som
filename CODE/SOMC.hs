@@ -16,13 +16,12 @@
 -- this program. If not, see http://www.gnu.org/licenses/.
 --
 -- -Julius Quasebarth (feldrandstudios@gmail.com)
-import qualified Data.Vector as Vector
+import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Maybe as Maybe
-import qualified Data.List as List
 
-type Vec a = Vector.Vector a
 -- some point in a coordinate system
+type Vec a = [a]
 type DataPoint = Vec Double
 -- a prototype in a coordinate system
 data Prototype = Prototype {point :: DataPoint, position :: Vec Int} deriving (Show)
@@ -32,39 +31,38 @@ instance Eq Prototype where
 
 -- for more intuitive typing (haha!)
 type Prototypes = [Prototype]
-type DataSet = Set.Set DataPoint
+type DataSet = Set DataPoint
+type MDCS = (DataSet, Prototypes)
 
 -- MultiDimensional Coordinate System
-data MDCS = MDCS {dataPoints :: DataSet, prototypes :: [Prototype]} deriving (Show)
-
 (-@>) :: [Double] -> [Int] -> Prototype
-(-@>) poi pos = Prototype (Vector.fromList poi)  (Vector.fromList pos)
+(-@>) poi pos = Prototype poi pos
 
 -- add two vectors (result vector has lowest dimension of both arguments)
 (>+) :: Num a => Vec a -> Vec a -> Vec a
-(>+) = Vector.zipWith (+)
+(>+) = zipWith (+)
 
 -- subtract two vectors (result vector has lowest dimension of both arguments)
 (>-) :: Num a => Vec a -> Vec a -> Vec a
-(>-) = Vector.zipWith (-)
+(>-) = zipWith (-)
 
 -- multiply vector by scalar
 (>*) :: Num a => Vec a -> a -> Vec a
-(>*) x y = Vector.map (y *) x
+(>*) x y = map (y *) x
 
 -- absolute of vector (also known as length)
 absv :: Floating a => Vec a -> a
-absv x = sqrt $ Vector.foldl (\s e -> s + e ^ (2 :: Int)) 0 x
+absv x = sqrt $ foldl (\s e -> s + e ^ (2 :: Int)) 0 x
 
 editNth :: (a -> a) -> Int -> [a] -> [a]
 editNth f 0 l = case l of
                      [] -> []
                      [x] -> [f x]
                      (x:xs) -> f x : xs
-editNth f n l = if n < 0 then l else case l of
+editNth f n l = if n <= 0 then l else case l of
                      [] -> []
                      [x] -> [x]
-                     (x:xs) -> x : editNth f (n-1) l
+                     (x:xs) -> x : editNth f (n-1) xs
 
 getWinner :: (DataPoint -> DataPoint -> Double) -> Prototypes -> DataPoint -> Prototype
 getWinner distance prlist dat = Maybe.fromJust $ snd $ foldl (
@@ -83,12 +81,19 @@ epoch :: (DataPoint -> DataPoint -> Double) -> (Vec Int -> Vec Int -> Double) ->
 epoch distance alpha mdcs = Set.foldl (
         \upr dat -> let winner = getWinner distance upr dat
                     in  updateWinner alpha upr winner dat
-    ) (prototypes mdcs) (dataPoints mdcs)
+    ) (snd mdcs) (fst mdcs)
 
-sortToGroups :: (DataPoint -> DataPoint -> Double) -> MDCS -> [DataSet]
-sortToGroups d (MDCS set prots) = Set.foldl (
-        \datslist pnt -> editNth (Set.insert pnt) (Maybe.fromJust $ List.elemIndex (getWinner d prots pnt) prots) datslist
-    ) (replicate (length prots) Set.empty) set
+sortToGroups :: (DataPoint -> DataPoint -> Double) -> MDCS -> [(Prototype, DataSet)]
+sortToGroups d (set, prots) = Set.foldl (
+        \rl pnt ->
+        let winner = getWinner d prots pnt
+        in  map (
+            \(prttt, nset) ->
+            if   prttt == winner
+            then (prttt, Set.insert pnt nset)
+            else (prttt, nset)
+        ) rl
+    ) (zip prots $ repeat Set.empty) set
 
 -- calculates the euclidean distance between two points
 euclidDistance :: DataPoint -> DataPoint -> Double
@@ -98,17 +103,17 @@ euclidDistance a b = absv $ a >- b
 independentAlpha :: Double -> Vec Int -> Vec Int -> Double
 independentAlpha alpha win test = if win == test then alpha else 0.0
 
-printSet :: Show a => Set.Set a -> IO ()
+printSet :: Show a => Set a -> IO ()
 printSet = Set.foldl (\i e -> i >> print e) (return ())
 
 printList :: Show a => [a] -> IO ()
 printList = foldl (\i e -> i >> print e) (return ())
 
-myMDCS :: MDCS
-myMDCS = MDCS (Set.fromList [Vector.singleton (-1.0), Vector.singleton 1.0, Vector.singleton 3.0, Vector.singleton 5.0]) [[0.0] -@> [0], [0.0] -@> [1], [0.0] -@> [2], [0.0] -@> [3]]
+myMDCS :: (DataSet, Prototypes)
+myMDCS = ((Set.fromList [[(-1.0)], [1.0], [3.0], [5.0]]), [[0.0] -@> [0], [0.0] -@> [1], [0.0] -@> [2], [0.0] -@> [3]])
 
 epoch10 :: MDCS
-epoch10 = iterate (\mdcs -> mdcs {prototypes=epoch euclidDistance (independentAlpha 0.2) mdcs}) myMDCS !! 10
+epoch10 = iterate (\mdcs@(ds, _) -> (ds, epoch euclidDistance (independentAlpha 0.2) mdcs)) myMDCS !! 10
 
 main :: IO ()
 main = print epoch10
