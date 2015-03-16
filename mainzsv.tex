@@ -6,7 +6,7 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 
-\title{Buchempfehlungen mit Hilfe von Selbstorganisierende Karten}
+\title{Buchempfehlungen mit Hilfe von Selbstorganisierenden Karten}
 \subtitle{Zwischenstandsverteidigung}
 \author{Julius Quasebarth \and Luisa Derer \and Robin Hankel}
 \institute{Albert Schweitzer Gymnasium Erfurt, Spez.}
@@ -31,6 +31,9 @@ Umsetzung von...
 \begin{itemize}[<+->]
 \item grundlegend benötigten Datenstrukturen
 \item Training selbstorganisierender Karten
+	\begin{itemize}[<+->]
+	\item Gruppieren von Datenpunkten im mehrdimensionalem Raum
+	\end{itemize}
 \item diversen Hilfsfunktionen
 \end{itemize}
 \end{block}
@@ -47,12 +50,11 @@ Umsetzung von...
 \begin{frame}{Über Haskell}
 Haskell ist \emph{funktional}.
 \begin{itemize}[<+->]
-\item kein Wert darf geändert werden (näher an der Mathematik: \(x = x +  3\) ist ungültig)
+\item kein Wert darf geändert werden (näher an der Mathematik: \(x = x +  3\) ungültig)
 	\begin{itemize}[<+->]
 	\item Funktionen mit gleichen Argumenten geben gleiche Ausgaben zurück
 	\item IO muss durch \glqq{}Monads\grqq{} verarbeitet werden
-	\item nicht-imperativer Stil (alles ist ein großer Ausdruck)
-	\item es existieren nur Funktionen (Variablen = Funktionen ohne Argumente)
+	\item nicht-imperativer Stil
 	\end{itemize}
 \end{itemize}
 \end{frame}
@@ -69,19 +71,26 @@ Haskell ist \emph{funktional}.
 
 \section{Vergleich zum Zeitplan}
 
+\begin{frame}{Zeitplan}
+\begin{tabular}{|l|r|}
+	\hline
+	Aufgabe & Dauer \\ \hline
+	Skizze Kapitel 2 \& Einleitung, & \\
+	Einarbeitung in Haskell & 3 Wochen \\ \hline
+	Umsetzung des Programms, & \\
+	Kapitel 2 fertigstellen, & \\
+	Kapitel 3, 4 skizziert & 5 Wochen \\ \hline
+	Daten für das Programm sammeln & 4 Wochen \\ \hline
+	Fertigstellung der Kapitel & 4 Wochen \\ \hline
+	Pufferzeit & 3 Wochen \\ \hline
+\end{tabular}
+\end{frame}
+
 \begin{frame}{Vergleich zum Zeitplan}
 \begin{itemize}[<+->]
 \item Lernen von Haskell länger als geplant
 \item Schreiben des Programmes verbraucht mehr Zeit als geplant
 \item Schreiben einzelner Kapitel schneller
-\end{itemize}
-\end{frame}
-
-\section{Präsentation des Erarbeiteten}
-
-\begin{frame}{Programm, API}
-\begin{itemize}
-\item \url{http://sammex.github.io/project-somc}
 \end{itemize}
 \end{frame}
 
