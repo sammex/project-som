@@ -139,6 +139,37 @@ Wie zu erkennen ist, ist die selbstorganisierende Karte im Wesen nicht sonderlic
 
 \section{Erklärung und Vorstellung des Programms}
 
+\subsection{Begründung der Wahl der Programmiersprache}
+
+Unser Programm, um welches es in dieser Arbeit geht, ist in Haskell geschrieben. Haskell ist eine funktionale Programmiersprache und somit sehr anders aufgebaut als imperative, objektorientierte Programmiersprachen. Funktionalität bedeutet:
+
+\begin{enumerate}
+\item Keine Variable darf verändert werden. Dies ist einer der Grundsätze der funktionalen Programmierung, denn durch dieses Prinzip ist es formal egal, in welcher Reihenfolge Prozesse ausgeführt werden.
+\item Eine Funktion gibt bei gleichen Parametern gleiche Ausgaben aus. Mit anderen Worten sind (die meisten) Funktionen in Haskell daher \glqq{}pure\grqq{} und verursachen keine \glqq{}side-effects\grqq{}, interagieren also nicht mit der Außenwelt.
+\end{enumerate}
+
+Dadurch entstehen allerdings Probleme bei In- und Output: Jede Funktion, die z.B. Eingaben vom Nutzer verarbeitet, ist \glqq{}impure\grqq{} (unrein), da ihre Ausgaben nicht nur von ihrer Parameterliste, sondern auch von der Außenwelt (dem Nutzer) abhängig sind. Haskell löst dieses Problem, indem jede Funktion, die Kontakt zur Außenwelt aufnimmt, markiert wird. Dies geschieht, indem Daten, die aus der Außenwelt stammen, in einem sogenanntem \glqq{}Monad\grqq{} verkapselt werden. Ein Monad ist eine Datenstruktur, deren Daten zwar weiter verarbeitet, aber nicht unbedingt aus dem Monad extrahiert werden können. Somit werden Daten, die durch In- und Output verursacht wurden (da es in Haskell keine Funktionen gibt, die nichts zurückgeben, da dies sinnlos wäre, geben auch Ausgabefunktionen etwas zurück) immer in einem \glqq{}IO-Monad\grqq{} gespeichert und können nicht wieder aus diesem extrahiert werden. Daher kann einfach bestimmt werden, ob eine Funktion mit der Außenwelt kommuniziert, indem die Typsignatur (besonders die Rückgabe der Funktion) beobachtet wird.
+
+Des weiteren verfolgt Haskell die Philosophie der \glqq{}lazy evaluation\grqq{}, wodurch Variablen erst dann ausgewertet werden, wenn sie auch benötigt werden (z.B. wenn eine Variable ausgegeben werden muss). Dadurch wird Rechenzeit gespart, da unbenötigte Ergebnisse auch nicht berechnet werden. Auch gibt es eine effiziente Umsetzung von Rekursivität in Haskell, was viele Funktionen vereinfacht und eleganter macht. Schließlich kompiliert der Haskell Compiler (in dieser Seminarfacharbeit wurde der am weitesten verbreitete Glasglow Haskell Compiler, oder GHC, verwendet) den Quellcode direkt in Assemblercode, wodurch, anders als bei Java, das Programm maschinenfreundlich --- und damit schneller --- ausgeführt wird.
+
+Für unser Programm brachten diese Umstände vor allem folgende Vorteile:
+
+\begin{enumerate}
+\item Die Schnelligkeit, die Haskell mit sich bringt, ist äußerst bedeutend. Weil eine selbstorganisierende Karte viele Daten verarbeiten muss, ist dieser Faktor nicht zu vernachlässigen.
+\item Haskell ist eine Programmiersprache, die sich in äußerst kurzer und prägnanter Form schreiben lässt. Dadurch ist es oftmals einfacher, den Überblick über ein in Haskell geschriebenes Programm zu behalten --- es bedeutet jedoch nicht, dass es einfacher ist, Programme in Haskell zu schreiben, denn es ist eine höhere Konzentration zum Schreiben dieser benötigt.
+\item Viele Datenstrukturen in Haskell sind wiederverwendbar: In den meisten objektorientierten Programmiersprachen trifft dies nicht zu. Stattdessen wird in jenen jede Datenstruktur für einen bestimmten Zweck verwendet, während Haskell darauf aufbaut, Datenstrukturen so abstrakt wie möglich zu halten.
+\item Haskells eigenes \glqq{}build system\grqq{}, cabal, ist in der Haskell Plattform erreichbar. Somit wird es für den Programmierer einfacher, Bibliotheken von Anderen (welche in großer Qualität und Zahl vorhanden sind) in das eigene Programm einzubinden.
+\item Schließlich läuft Haskell auch auf den meisten Betriebssystemen (Windows, Linux, OSX, \dots{}); Da es jedoch nicht nur einen Compiler gibt und die Sprache Haskell letztendlich nur eine Konvention ist, kann sie auch nach Bedarf auf andere Betriebssysteme übertragen werden.
+\end{enumerate}
+
+Der Leser sei an dieser Stelle angehalten, sich mit der Syntax Haskells bekannt zu machen, sodass Programmbeispiele später nachvollzogen werden können.
+
+Es folgen Beschreibungen von Bibliotheken, die benutzt wurden. Dies soll dazu dienen, dem Leser das Verstehen des Programms zu erleichtern.
+
+\subsubsection{Die Pipes-Bibliothek}
+
+\subsubsection{Die Criterion-Bibliothek}
+
 \subsection{Funktionsweise des abstrakten Teils}
 
 \subsection{Erweiterung auf unsere Anwendung / Anpassung des Programms}
