@@ -76,13 +76,26 @@ module SOMC (
     getWinner,
     updateWinner,
     epoch,
+    train,
     -- ** Processing Multi-Dimensional Coordinate Systems
     sortToGroups,
     -- ** Auxiliary Functions
-    euclidDistance,
-    independentAlpha,
+    -- $build
     printSet,
-    printList
+    printList,
+    euclidDistance,
+    -- *** Base Alpha Functions
+    quadraticAlpha,
+    reversedAlpha,
+    linearAlpha,
+    --- *** Radius Interpretations
+    squareInterpretation,
+    independentInterpretation,
+    hexagonalInterpretation,
+    --- *** Epoch-Based Radius Distribution Functions
+    squareRadius,
+    --- *** Radius-Based Alpha Distribution Functions
+    squareRadiusDistribution
 ) where
 
 import Data.Set (Set)
@@ -228,17 +241,124 @@ sortToGroups d (set, prots) = Set.foldl (
         ) rl
     ) (zip prots $ repeat Set.empty) set
 
+-- | A function for training a SOM. It iterates the epoch-function.
+train :: (DataPoint -> DataPoint -> Double) -- ^ distance function
+         -> (Int -> Int -> Vec Int -> Vec Int -> Double) -- ^ Radius function, enhanced by two arguments: The first
+                                                         -- one is the amount of training cycles, the second is the
+                                                         -- current training cycle (as the output of this function
+                                                         -- should change over time).
+         -> MDCS
+         -> Int -- ^ amount of training cycles
+         -> Prototypes
+train dist prad (dat, prot) count =
+    let (fp, _) = iterate (\(protm, i) -> (epoch dist (prad count i) (dat, protm), i+1)) (prot, 1) !! count
+    in fp
+
+-- $build
+-- The following functions can be used to build customized training functions.
+-- It is important to understand how they work together, so they can be built
+-- together correctly. 'train' and 'epoch' both use alpha-functions which
+-- tell how far a prototype has to be moved. As the names of 'quadraticAlpha',
+-- 'reversedAlpha' and 'linearAlpha' suggest, these are the most important
+-- parts of configuration. Their types are equal. They all take a radius function
+-- , a radius-based alpha function and a initial alpha value and return a
+-- configured alpha function. Radius functions are constructed using 'squareRadius'
+-- or similar functions. Radius-based alpha functions are constructed using
+-- an interpretation, for example 'squareInterpretation'. But an interpretation
+-- also needs to know how the alpha value should change with greater radius, so
+-- it needs a radius-based alpha distribution. So a complete alpha function could
+-- look like @quadraticAlpha (squareRadius 3) (hexagonalInterpretation
+-- squareRadiusDistribution) 0.3@.
+
 -- | Calculates the euclidean distance between two points, using the 'absv'
 --  function.
 euclidDistance :: DataPoint -> DataPoint -> Double
 euclidDistance a b = absv $ a >- b
 
--- | A radius function, as discussed with the 'updateWinner' function.
---  @independentAlpha a w t@ returns @a@ if @t == w@, and @0@ if @t /= w@. In
---  other words, only the winning prototype is updated with an alpha factor of
---  @a@.
-independentAlpha :: Double -> Vec Int -> Vec Int -> Double
-independentAlpha alpha win test = if win == test then alpha else 0.0
+-- | A function taking an alpha value returning a radius-based alpha function, as discussed
+--  with the 'updateWinner' function. @independentRadius a w t@ returns @a@ if
+--  @t == w@, and @0@ if @t /= w@. In other words, only the winning prototype is
+--  updated with an alpha factor of @a@.
+independentInterpretation :: Double -> Vec Int -> Vec Int -> Double
+independentInterpretation alpha win test = if win == test then alpha else 0.0
+
+-- | A radius interpretation using squares as prototype "tiles".
+squareInterpretation :: (Double -> Int -> Int -> Double) -> Int -> Double -> Vec Int -> Vec Int -> Double
+squareInterpretation distr rad alpha win test = let distance = maximum $ zipWith (\a b -> abs $ a - b) test win
+                                                in  if distance > rad then 0.0 else distr alpha rad distance
+
+-- | A radius interpretation using hexagonal "tiles" for the prototypes.
+hexagonalInterpretation :: (Double -> Int -> Int -> Double) -> Int -> Double -> Vec Int -> Vec Int -> Double
+hexagonalInterpretation distr rad alpha win test = distr alpha rad (let (wx, wy) = takePair win
+                                                                        (tx, ty) = takePair test
+                                                                    in  let {dx = tx - wx; dy = ty - wy}
+                                                                        in  if (signum dx) * (signum dy) == (-1) then (abs dx) + (abs dy) else max dx dy)
+        where {takePair [] = (0, 0); takePair (x:[]) = (x, 0); takePair (x:y:_) = (x, y)}
+
+-- | A radius-based alpha distribution using a quadratic function for underlying calculations.
+squareRadius :: Int -- ^ starting radius
+                -> Int -> Int -> Int
+squareRadius start count i = let a = (fromIntegral $ 1 - start) / (fromIntegral $ count ^ 2) :: Double
+                             in  round $ (a * (fromIntegral i ^ 2) + fromIntegral start :: Double)
+
+-- | A distribution of the alpha value throughout different radii. It can be
+-- viewed as a graph of a parabola, whereas radii are noted on the x-axis and
+-- alpha values are noted on the y-axis.
+squareRadiusDistribution :: Double -- ^ A regulating variable between (!) 0 and (about) 0.5, stating
+                                   -- how curvy the parabola should be. If this value is
+                                   -- @r@ and the following value is @e@, then the parabola
+                                   -- goes through the points (0|1), (0.5|r) and (1|e),
+                                   -- whereas 1 at the y-axis is the maximum radius possible
+                                   -- and 1 at the x-axis is the maximum alpha possible.
+                            -> Double -- ^ A regulating variable between 0 and the previous
+                                      -- variable, stating how low the parabola should go
+                                      -- at the maximum radius possible: If this value is
+                                      -- called @e@ and the maximum alpha value possible
+                                      -- is @a@, then the outermost prototype is moved
+                                      -- by @e*a@.
+                            -> Double -> Int -> Int -> Double -- ^ The final radius-based alpha distribution.
+squareRadiusDistribution r e alpha maxr actr = let x = fromIntegral actr
+                                                   rm = fromIntegral maxr
+                                                   a = (2*alpha*e + 2*alpha - 4*alpha*r) / (rm ^ 2)
+                                                   b = (4*alpha*r - 3*alpha - alpha*e) / rm
+                                               in  a*(x^2) + b*x + alpha
+
+-- | A epoch-based alpha distribution using quadratic functions for underlying calculations.
+quadraticAlpha :: (Int -> Int -> Int)
+                  -> (Int -> Double -> Vec Int -> Vec Int -> Double) -- ^ A function which takes a radius and an alpha value and
+                                                                     --  returns a radius-based alpha function.
+                  -> Double -- ^ A initial alpha value. It decreases quadratically, which
+                            -- means it starts to decrease slowly and then faster.
+                  -> Int
+                  -> Int
+                  -> Vec Int
+                  -> Vec Int
+                  -> Double
+quadraticAlpha radd radf a count i = radf (radd count i) (a * (1 - (fromIntegral i / fromIntegral count) ^ 2))
+
+-- | This epoch-based alpha distribution is unique, because it does not depend
+-- on the amount of training epochs, but rather decreases like @1/x@. The more
+-- training samples there are, the more accurate are the results.
+reversedAlpha :: (Int -> Int -> Int)
+                 -> (Int -> Double -> Vec Int -> Vec Int -> Double)
+                 -> Double
+                 -> Int
+                 -> Int
+                 -> Vec Int
+                 -> Vec Int
+                 -> Double
+reversedAlpha radd radf a count i = radf (radd count i) (a / (fromIntegral i + 1))
+
+-- | This epoch-based alpha distribution uses a linearly decreasing alpha value.
+linearAlpha :: (Int -> Int -> Int)
+               -> (Int -> Double -> Vec Int -> Vec Int -> Double)
+               -> Double
+               -> Int
+               -> Int
+               -> Vec Int
+               -> Vec Int
+               -> Double
+linearAlpha radd radf a count i = radf (radd count i) ((-a) * (fromIntegral i) / (fromIntegral count) + a)
 
 -- | Prints a set in a neat way by just printing every element, so the developer
 --  can see what the set contains in an easy way.
