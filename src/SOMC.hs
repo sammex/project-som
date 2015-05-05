@@ -60,6 +60,7 @@ prototype space will always be next to each other in data space, too.
 
 module SOMC (
     -- * Basic Types
+    Vec,
     DataPoint,
     DataSet,
     Prototype,
