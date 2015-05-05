@@ -89,13 +89,13 @@ module SOMC (
     quadraticAlpha,
     reversedAlpha,
     linearAlpha,
-    --- *** Radius Interpretations
+    -- *** Prototype Space Interpretations
     squareInterpretation,
     independentInterpretation,
     hexagonalInterpretation,
-    --- *** Epoch-Based Radius Distribution Functions
+    -- *** Epoch-Based Radius Functions
     squareRadius,
-    --- *** Radius-Based Alpha Distribution Functions
+    -- *** Radius-Based Alpha Functions
     squareRadiusDistribution
 ) where
 
