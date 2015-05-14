@@ -58,7 +58,8 @@ aligned on a grid. Using this technique, prototypes next to each other in
 prototype space will always be next to each other in data space, too.
 -}
 
-module SOMC (
+module Main (
+    main,
     -- * Basic Types
     Vec,
     DataPoint,
@@ -99,9 +100,18 @@ module SOMC (
     squareRadiusDistribution
 ) where
 
+import Control.Monad
+import Codec.Picture
+import Data.Colour.RGBSpace
+import Data.Colour.RGBSpace.HSV
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Maybe as Maybe
+import Debug.Trace
+import qualified Data.Foldable as F
+import Data.Word
+import System.Environment
+import System.Random
 
 -- | This type assignment is used to provide more intuitive working with vectors.
 type Vec a = [a]
@@ -296,33 +306,20 @@ hexagonalInterpretation distr rad alpha win test = distr alpha rad (let (wx, wy)
                                                                         in  if (signum dx) * (signum dy) == (-1) then (abs dx) + (abs dy) else max dx dy)
         where {takePair [] = (0, 0); takePair (x:[]) = (x, 0); takePair (x:y:_) = (x, y)}
 
--- | A radius-based alpha distribution using a quadratic function for underlying calculations.
+-- | A epoch-based radius distribution using a quadratic function for underlying calculations.
 squareRadius :: Int -- ^ starting radius
                 -> Int -> Int -> Int
-squareRadius start count i = let a = (fromIntegral $ 1 - start) / (fromIntegral $ count ^ 2) :: Double
-                             in  round $ (a * (fromIntegral i ^ 2) + fromIntegral start :: Double)
+squareRadius start count i = let a = fromIntegral start / (fromIntegral $ count ^ 2)
+                             in  round (a * (fromIntegral i - fromIntegral count) ^ 2 :: Double)
 
 -- | A distribution of the alpha value throughout different radii. It can be
 -- viewed as a graph of a parabola, whereas radii are noted on the x-axis and
 -- alpha values are noted on the y-axis.
-squareRadiusDistribution :: Double -- ^ A regulating variable between (!) 0 and (about) 0.5, stating
-                                   -- how curvy the parabola should be. If this value is
-                                   -- @r@ and the following value is @e@, then the parabola
-                                   -- goes through the points (0|1), (0.5|r) and (1|e),
-                                   -- whereas 1 at the y-axis is the maximum radius possible
-                                   -- and 1 at the x-axis is the maximum alpha possible.
-                            -> Double -- ^ A regulating variable between 0 and the previous
-                                      -- variable, stating how low the parabola should go
-                                      -- at the maximum radius possible: If this value is
-                                      -- called @e@ and the maximum alpha value possible
-                                      -- is @a@, then the outermost prototype is moved
-                                      -- by @e*a@.
-                            -> Double -> Int -> Int -> Double -- ^ The final radius-based alpha distribution.
-squareRadiusDistribution r e alpha maxr actr = let x = fromIntegral actr
-                                                   rm = fromIntegral maxr
-                                                   a = (2*alpha*e + 2*alpha - 4*alpha*r) / (rm ^ 2)
-                                                   b = (4*alpha*r - 3*alpha - alpha*e) / rm
-                                               in  a*(x^2) + b*x + alpha
+squareRadiusDistribution :: (Double -> Int -> Int -> Double) -- ^ The final radius-based alpha distribution.
+squareRadiusDistribution alpha maxr actr = let x = fromIntegral actr
+                                               rm = fromIntegral maxr
+                                               a = alpha / (rm ^ 2)
+                                           in  a * (x - rm) ^ 2
 
 -- | A epoch-based alpha distribution using quadratic functions for underlying calculations.
 quadraticAlpha :: (Int -> Int -> Int)
@@ -335,7 +332,8 @@ quadraticAlpha :: (Int -> Int -> Int)
                   -> Vec Int
                   -> Vec Int
                   -> Double
-quadraticAlpha radd radf a count i = radf (radd count i) (a * (1 - (fromIntegral i / fromIntegral count) ^ 2))
+quadraticAlpha radd radf a count i = let co = a / (fromIntegral count ^ 2)
+                                     in  radf (radd count i) $ co * (fromIntegral $ i - count) ^ 2
 
 -- | This epoch-based alpha distribution is unique, because it does not depend
 -- on the amount of training epochs, but rather decreases like @1/x@. The more
@@ -348,7 +346,7 @@ reversedAlpha :: (Int -> Int -> Int)
                  -> Vec Int
                  -> Vec Int
                  -> Double
-reversedAlpha radd radf a count i = radf (radd count i) (a / (fromIntegral i + 1))
+reversedAlpha radd radf a count i vf vc = radf (radd count i) (a / (fromIntegral i + 1)) vf vc
 
 -- | This epoch-based alpha distribution uses a linearly decreasing alpha value.
 linearAlpha :: (Int -> Int -> Int)
@@ -360,6 +358,18 @@ linearAlpha :: (Int -> Int -> Int)
                -> Vec Int
                -> Double
 linearAlpha radd radf a count i = radf (radd count i) ((-a) * (fromIntegral i) / (fromIntegral count) + a)
+
+randomMDCS :: Int -- ^ square root of prototypes
+              -> Int -- ^ number of data points
+              -> Double -- ^ maximum x value (data points)
+              -> Double -- ^ maximum y value (data points)
+              -> IO MDCS
+randomMDCS prn dan maxx maxy = do {
+    preprts <- replicateM (prn ^ 2) $ do {x <- randomRIO (0.2 * maxx, 0.8 * maxx); y <- randomRIO (0.2 * maxy, 0.8 * maxy); return [x, y]}; -- preprts :: [[Double]]
+    let {prts = fst $ foldl (\(l, (x, y)) e -> ((e -@> [x, y]) : l, (if x == prn - 1 then (0, y + 1) else (x + 1, y)))) ([], (0, 0)) preprts};
+    dats <- replicateM dan $ do {x <- randomRIO (0, maxx); y <- randomRIO (0, maxy); return [x, y]};
+    return (Set.fromList dats, prts);
+    }
 
 -- | Prints a set in a neat way by just printing every element, so the developer
 --  can see what the set contains in an easy way.
@@ -407,5 +417,105 @@ myMDCS2 = ((Set.fromList [
         [11.2, 15.5]
     ]), [[3, 4.5] -@> [0], [2, 12] -@> [1], [7, 5] -@> [2], [5, 10] -@> [3], [5.5, 16] -@> [4], [8.5, 14.5] -@> [5], [11, 8] -@> [5]])
 
+randomColors :: Int -> IO [RGB Word8]
+randomColors n = let hrange = 360.0 / fromIntegral n :: Double
+                 in  getStdGen >>=
+                     \stdg -> return $ map (fmap (truncate . (* 255))) $ (\(x, _, _, _) -> x) $ flip (!!) n $ iterate (
+                         \(l, b, curN, gen) -> let (newHue, gen2) = randomR (hrange * fromIntegral curN, hrange * (fromIntegral curN + 1)) gen
+                                                   (newVal, gen3) = randomR (if b then (0.5, 1.0) else (0.0, 0.5)) gen2
+                                               in  (hsv newHue 1.0 newVal : l, not b, curN + 1, gen3)
+                     ) ([], True, 0, stdg)
+
+plotRandomColors :: [RGB Word8] -> Image PixelRGB8
+plotRandomColors cl = generateImage (\x y -> uncurryRGB PixelRGB8 (cl !! x)) (length cl) 1
+
+plotSquareRadius :: Int -- ^ starting radius
+                    -> Int -- ^ amount of training samples
+                    -> Image Pixel8
+plotSquareRadius r c = let vals = [squareRadius r c x | x <- [0..c]]
+                           m = maximum vals
+                       in  generateImage (\x y -> if squareRadius r c x == m - y then 0 else 255) c m
+
+plotSquareRadiusDistribution :: Double -- ^ squareRadiusDistribution argument: Alpha value
+                                -> Int -- ^ maximum radius
+                                -> Int -- ^ scale by
+                                -> Image Pixel8
+plotSquareRadiusDistribution a rm sc = let vals = [squareRadiusDistribution a rm x | x <- [0..rm]]
+                                           m = round $ fromIntegral sc * maximum vals
+                                       in  generateImage (\x y -> if round ((fromIntegral sc) * squareRadiusDistribution a rm x) == m - y then 0 else 255) rm m
+
+plotAlphaFunction :: ((Int -> Int -> Int) -> (Int -> Double -> Vec Int -> Vec Int -> Double) -> Double -> Int -> Int -> Vec Int -> Vec Int -> Double)
+                     -> Double -- ^ alpha value
+                     -> Int -- ^ amount of training samples
+                     -> Int -- ^ scale
+                     -> Image Pixel8
+plotAlphaFunction alph val cntt sc = let fakeRadius = \_ _ -> 0
+                                         fakeAlpha = \_ x _ _ -> x
+                                         scale = fromIntegral sc
+                                         baseAlpha = \i -> scale * alph fakeRadius fakeAlpha val cntt i [0] [0]
+                                     in  generateImage (\x y -> if (round $ baseAlpha x) == sc - y then 0 else 255) cntt sc
+
+plot2DMDCS :: MDCS
+              -> Int -- ^ scale
+              -> Image Pixel8
+plot2DMDCS (dset, prots) sc = let dlist = Set.toList dset
+                                  maxx = maximum (map (flip (!!) 0) dlist)
+                                  maxy = maximum (map (flip (!!) 1) dlist)
+                                  xrange = maxx + 1
+                                  yrange = maxy + 1
+                                  scale = fromIntegral sc
+                              in  generateImage (
+                                      \x y -> if any (isPointAtPixel scale x y) dlist then 0 else
+                                          if any (isPointAtPixel scale x y) (map point prots) then 125 else 255
+                                  ) (sc * (round xrange)) (sc * (round yrange))
+
+plot2DMDCSGroups :: [(Prototype, DataSet)]
+                    -> Int -- ^ scale
+                    -> [RGB Word8] -- ^ colors
+                    -> Image PixelRGB8
+plot2DMDCSGroups l sc groupColors = let colorGroups = zip groupColors $ map snd l
+                                        dlist = concatMap (\(p, ds) -> Set.toList ds) l
+                                        maxx = maximum (map (flip (!!) 0) dlist)
+                                        maxy = maximum (map (flip (!!) 1) dlist)
+                                        xrange = maxx + 1
+                                        yrange = maxy + 1
+                                        scale = fromIntegral sc
+                                    in  generateImage
+                                            (\x y -> uncurryRGB PixelRGB8 $ pixelGroupColor scale x y colorGroups)
+                                            (sc * (round xrange)) (sc * (round yrange))
+
+isPointAtPixel :: Double -- ^ scale
+                  -> Int -- ^ possible coordinate x
+                  -> Int -- ^ possible coordinate y
+                  -> [Double] -- ^ data point (2D)
+                  -> Bool -- ^ data point is at possible coordinate?
+isPointAtPixel scale x y l = x == (round $ (*) scale $ l !! 0) && y == (round $ (*) scale $ l !! 1)
+
+pixelGroupColor :: Double -- ^ scale
+                   -> Int -- ^ possible coordinate x
+                   -> Int -- ^ possible coordinate y
+                   -> [(RGB Word8, DataSet)]
+                   -> RGB Word8
+pixelGroupColor scale x y l = let fl = filter (
+                                           \(rgb, ds) -> any (isPointAtPixel scale x y) ds
+                                       ) $ map (\(rgb, ds) -> (rgb, Set.toList ds)) l
+                              in  if fl == [] then RGB 255 255 255 else fst $ head fl
+
 main :: IO ()
-main = print "Hello, World!"
+main = do {
+    let {gCount = 5};
+    let {pCount = 200};
+    arg <- fmap head getArgs;
+    putStrLn "Generating MDCS...";
+    rmdcs <- randomMDCS gCount pCount 10.0 10.0;
+    print rmdcs;
+    savePngImage (arg ++ "/origMDCS.png") $ ImageY8 $ plot2DMDCS rmdcs 50;
+    putStrLn "Generating Colors...";
+    colrs <- randomColors gCount;
+    savePngImage (arg ++ "/colorMap.png") $ ImageRGB8 $ plotRandomColors colrs;
+    putStrLn "Sorting & Plotting Points...";
+    let {trmdcs = sortToGroups euclidDistance (fst rmdcs, train euclidDistance (linearAlpha (squareRadius 3) (squareInterpretation squareRadiusDistribution) 0.3) rmdcs 100)};
+    let {trmdcsPlot = plot2DMDCSGroups trmdcs 50 colrs};
+    print trmdcs;
+    savePngImage (arg ++ "/finalMDCS.png") $ ImageRGB8 trmdcsPlot;
+    }
