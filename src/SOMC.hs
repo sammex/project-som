@@ -101,6 +101,7 @@ module Main (
 ) where
 
 import Control.Monad
+import Control.DeepSeq
 import Codec.Picture
 import Data.Colour.RGBSpace
 import Data.Colour.RGBSpace.HSV
@@ -111,6 +112,7 @@ import Debug.Trace
 import qualified Data.Foldable as F
 import Data.Word
 import System.Environment
+import System.IO
 import System.Random
 
 -- | This type assignment is used to provide more intuitive working with vectors.
@@ -134,6 +136,9 @@ data Prototype = Prototype {
 -- | Two prototypes are equal if their position in prototype space is equal.
 instance Eq Prototype where
     a == b = position a == position b
+
+instance NFData Prototype where
+    rnf (Prototype pnt pos) = rnf pnt `seq` rnf pos
 
 -- | This type assignment is used for more intuitive typing @:)@.
 type Prototypes = [Prototype]
@@ -319,7 +324,7 @@ squareRadiusDistribution :: (Double -> Int -> Int -> Double) -- ^ The final radi
 squareRadiusDistribution alpha maxr actr = let x = fromIntegral actr
                                                rm = fromIntegral maxr
                                                a = alpha / (rm ^ 2)
-                                           in  a * (x - rm) ^ 2
+                                           in  if rm == 0.0 then alpha else a * (x - rm) ^ 2
 
 -- | A epoch-based alpha distribution using quadratic functions for underlying calculations.
 quadraticAlpha :: (Int -> Int -> Int)
@@ -422,7 +427,7 @@ randomColors n = let hrange = 360.0 / fromIntegral n :: Double
                  in  getStdGen >>=
                      \stdg -> return $ map (fmap (truncate . (* 255))) $ (\(x, _, _, _) -> x) $ flip (!!) n $ iterate (
                          \(l, b, curN, gen) -> let (newHue, gen2) = randomR (hrange * fromIntegral curN, hrange * (fromIntegral curN + 1)) gen
-                                                   (newVal, gen3) = randomR (if b then (0.5, 1.0) else (0.0, 0.5)) gen2
+                                                   (newVal, gen3) = randomR (if b then (0.7, 0.8) else (0.3, 0.4)) gen2
                                                in  (hsv newHue 1.0 newVal : l, not b, curN + 1, gen3)
                      ) ([], True, 0, stdg)
 
@@ -461,13 +466,22 @@ plot2DMDCS :: MDCS
 plot2DMDCS (dset, prots) sc = let dlist = Set.toList dset
                                   maxx = maximum (map (flip (!!) 0) dlist)
                                   maxy = maximum (map (flip (!!) 1) dlist)
-                                  xrange = maxx + 1
-                                  yrange = maxy + 1
+                                  xrange = maxx
+                                  yrange = maxy
                                   scale = fromIntegral sc
                               in  generateImage (
-                                      \x y -> if any (isPointAtPixel scale x y) dlist then 0 else
-                                          if any (isPointAtPixel scale x y) (map point prots) then 125 else 255
+                                      \x y -> if any (isPointAtPixel scale x y) (map point prots) then 100 else
+                                          if any (isPointAtPixel scale x y) dlist then 0 else 255
                                   ) (sc * (round xrange)) (sc * (round yrange))
+
+plotPrototypes :: Prototypes
+                  -> Int -- ^ scale
+                  -> Int -- ^ maxx
+                  -> Int -- ^ maxy
+                  -> Image Pixel8
+plotPrototypes l sc mx my = let scale = fromIntegral sc
+                                pointList = map (map (round . (*) scale) . point) l
+                            in  generateImage (\x y -> if elem [x, y] pointList then 0 else 255) (sc * mx) (sc * my)
 
 plot2DMDCSGroups :: [(Prototype, DataSet)]
                     -> Int -- ^ scale
@@ -477,8 +491,8 @@ plot2DMDCSGroups l sc groupColors = let colorGroups = zip groupColors $ map snd 
                                         dlist = concatMap (\(p, ds) -> Set.toList ds) l
                                         maxx = maximum (map (flip (!!) 0) dlist)
                                         maxy = maximum (map (flip (!!) 1) dlist)
-                                        xrange = maxx + 1
-                                        yrange = maxy + 1
+                                        xrange = maxx
+                                        yrange = maxy
                                         scale = fromIntegral sc
                                     in  generateImage
                                             (\x y -> uncurryRGB PixelRGB8 $ pixelGroupColor scale x y colorGroups)
@@ -499,23 +513,40 @@ pixelGroupColor :: Double -- ^ scale
 pixelGroupColor scale x y l = let fl = filter (
                                            \(rgb, ds) -> any (isPointAtPixel scale x y) ds
                                        ) $ map (\(rgb, ds) -> (rgb, Set.toList ds)) l
-                              in  if fl == [] then RGB 255 255 255 else fst $ head fl
+                              in  if fl == [] then RGB 0 0 0 else fst $ head fl
 
 main :: IO ()
 main = do {
-    let {gCount = 5};
-    let {pCount = 200};
+    let {gCount = 4};
+    let {pCount = 750};
+    let {scale = 10};
     arg <- fmap head getArgs;
     putStrLn "Generating MDCS...";
     rmdcs <- randomMDCS gCount pCount 10.0 10.0;
-    print rmdcs;
-    savePngImage (arg ++ "/origMDCS.png") $ ImageY8 $ plot2DMDCS rmdcs 50;
+    putStrLn "Plotting random MDCS...";
+    rplot <- return $ force $ plot2DMDCS rmdcs scale;
+    putStrLn "Saving random MDCS...";
+    savePngImage (arg ++ "/origMDCS.png") $ ImageY8 rplot;
     putStrLn "Generating Colors...";
-    colrs <- randomColors gCount;
+    colrs <- randomColors $ gCount ^ 2;
+    putStrLn "Saving Colors...";
     savePngImage (arg ++ "/colorMap.png") $ ImageRGB8 $ plotRandomColors colrs;
-    putStrLn "Sorting & Plotting Points...";
-    let {trmdcs = sortToGroups euclidDistance (fst rmdcs, train euclidDistance (linearAlpha (squareRadius 3) (squareInterpretation squareRadiusDistribution) 0.3) rmdcs 100)};
-    let {trmdcsPlot = plot2DMDCSGroups trmdcs 50 colrs};
-    print trmdcs;
-    savePngImage (arg ++ "/finalMDCS.png") $ ImageRGB8 trmdcsPlot;
+    putStrLn "Saving Prototype Plot...";
+    savePngImage (arg ++ "/origProts.png") $ ImageY8 $ plotPrototypes (snd rmdcs) scale 10 10;
+    putStrLn "Grouping random MDCS...";
+    grmdcs <- return $ force $ sortToGroups euclidDistance rmdcs;
+    putStrLn "Plotting original groups...";
+    savePngImage (arg ++ "/origMDCSGroups.png") $ ImageRGB8 $ plot2DMDCSGroups grmdcs scale colrs;
+    putStrLn "Sorting Points...";
+    trmdcs <- return $ force $ sortToGroups euclidDistance (fst rmdcs, train euclidDistance (linearAlpha (squareRadius 3) (squareInterpretation squareRadiusDistribution) 0.3) rmdcs 100);
+    putStrLn "Plotting Points...";
+    trmdcsPlot <- return $ force $ plot2DMDCSGroups trmdcs scale colrs;
+    putStrLn "Saving Plot...";
+    savePngImage (arg ++ "/finalMDCSGroups.png") $ ImageRGB8 trmdcsPlot;
+    putStrLn "Plotting Prototypes...";
+    protPlot <- return $ force $ plotPrototypes (map fst trmdcs) scale 10 10;
+    putStrLn "Saving Prototype Plot...";
+    savePngImage (arg ++ "/finalProts.png") $ ImageY8 protPlot;
+    putStrLn "Saving Prototype Information...";
+    writeFile (arg ++ "/prots.txt") $ unlines $ map (\(_, dat) -> show $ Set.size dat) trmdcs
     }
