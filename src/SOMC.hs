@@ -307,8 +307,9 @@ squareInterpretation distr rad alpha win test = let distance = maximum $ zipWith
 hexagonalInterpretation :: (Double -> Int -> Int -> Double) -> Int -> Double -> Vec Int -> Vec Int -> Double
 hexagonalInterpretation distr rad alpha win test = distr alpha rad (let (wx, wy) = takePair win
                                                                         (tx, ty) = takePair test
-                                                                    in  let {dx = tx - wx; dy = ty - wy}
-                                                                        in  if (signum dx) * (signum dy) == (-1) then (abs dx) + (abs dy) else max dx dy)
+                                                                        dx = tx - wx
+                                                                        dy = ty - wy
+                                                                    in  if (signum dx) * (signum dy) == (-1) || (signum dx) * (signum dy) == 0 then (abs dx) + (abs dy) else max (abs dx) (abs dy))
         where {takePair [] = (0, 0); takePair (x:[]) = (x, 0); takePair (x:y:_) = (x, y)}
 
 -- | A epoch-based radius distribution using a quadratic function for underlying calculations.
