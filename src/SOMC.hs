@@ -327,6 +327,10 @@ squareRadiusDistribution alpha maxr actr = let x = fromIntegral actr
                                                a = alpha / (rm ^ 2)
                                            in  if rm == 0.0 then alpha else a * (x - rm) ^ 2
 
+reversedRadiusDistribution :: (Double -> Int -> Int -> Double)
+reversedRadiusDistribution alpha _ actr = let x = fromIntegral actr
+                                          in  alpha / (x + 1)
+
 -- | A epoch-based alpha distribution using quadratic functions for underlying calculations.
 quadraticAlpha :: (Int -> Int -> Int)
                   -> (Int -> Double -> Vec Int -> Vec Int -> Double) -- ^ A function which takes a radius and an alpha value and
