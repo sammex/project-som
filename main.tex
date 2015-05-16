@@ -100,8 +100,11 @@ Our super duper cool abstract text...
 
 \commonlettrine{J}eder kennt das Gefühl der Leere nach dem Lesen eines Buches. Welches Buch soll ich mir als nächstes vornehmen? Ein Buch des selben Autors? Oder doch lieber das Genre entscheiden lassen?
 Um das Nachdenken über das nächste Buch kürzer zu machen, haben wir uns dazu entschieden, das Problem im Zuge der Projektarbeit in der 10. Klasse zu lösen.
-Dafür nutzen wir selbstorganisierende Karten um Bücher mit dem selben Genre zu empfehlen. Mit diesem mathematischen Prinzip lassen sich Punkte im n-dimensionalem Raum in beliebig viele Gruppen unterteilen, wodurch sich Gruppen von Personen mit ähnlichen Lesevorzügen erstellen lassen. Je nachdem, welche Bücher die Personen bereits gelesen haben, kann somit ein \glqq{}Pool\grqq{} aus Büchern erstellt werden. In unserer Seminarfacharbeit wird vor allem auf die Erstellung des Programms, das Sammeln von Daten dafür und die Anwendung dessen eingegangen. 
+
+Dafür nutzen wir selbstorganisierende Karten um Bücher mit dem selben Genre zu empfehlen. Mit diesem mathematischen Prinzip lassen sich Punkte im n-dimensionalem Raum in beliebig viele Gruppen unterteilen, wodurch sich Gruppen von Personen mit ähnlichen Lesevorzügen erstellen lassen. Je nachdem, welche Bücher die Personen bereits gelesen haben, kann somit ein \glqq{}Pool\grqq{} aus Büchern erstellt werden. In unserer Seminarfacharbeit wird vor allem auf die Erstellung des Programms, das Sammeln von Daten dafür und die Anwendung dessen eingegangen.
+ 
 Unsere Ziele sind das Erstellen eines Programmes, welches Bücher mit Hilfe einer selbstorganisierender Karte in viele Gruppen einteilen kann und so Buchempfehlungen ausgibt, das Erklären das Programmes mittels einer schriftlichen Arbeit und das Erstellen einer Internetseite um das Programm nutzbar zu machen.
+
 Um die Funktionsweise des Programmes gut nachvollziehen zu können, werden wir zuerst die Grundlagen einer selbstorganisierenden Karte und neuronaler Netze klären. Im Anschluss werden wir die Wahl unserer Programmiersprache, Haskell, begründen. Als nächstes folgt die Erklärung der mathematischen Prinzipien welche wir für unser Programm nutzen. Die Erklärung des Programms schließt sich an, wobei erst die wichtigsten Funktionen behandelt und dann auf die Nebenfunktionen eingegangen wird. Der folgende Abschnitt beschreibt die Anwendungen, für die unser Programm genutzt werden kann. Dabei wird vor allem Wert auf die Kundenempfehlung im Onlinehanedel gelegt. Auch Anwendungen, welche schon genutzt werden, werden erkärt. Abschließen wird die Arbeit mit dem Beschreiben unserer Internetseite.
 
 \section{Mathematische Prinzipien der selbstorganisierenden Karte}
@@ -125,7 +128,7 @@ lautet\footnote{Diese Funktion spiegelt letztendlich den euklidischen Abstand vo
 
 Die selbstorganisierende Karte lernt, indem der Repräsentationspunkt eines Neurons der Kohonenkarte verschoben wird. Dazu gibt man ein Eingabemuster in das Netz ein und verschiebt den Repräsentationspunkt des Gewinnerneurons um einen bestimmten Anteil in Richtung des eingegebenen Punktes. Interessant hierbei ist, dass auch Neuronen in der unmittelbaren Umgebung des Gewinnerneurons in Richtung des eingegebenen Punktes verschoben werden können: Somit können sich die Repräsentationspunkte im Raum auf ähnliche Weise anordnen, wie die Neuronen der Kohonenschicht angeordnet sind.
 
-\section{Anwendung der Prinzipien der selbstorganisierenden Karte}
+\subsection{Anwendung der Prinzipien der selbstorganisierenden Karte}
 
 Natürlich finden die oben beschriebenen Prinzipien auch in der Praxis Anwendung. Besonders, wenn Informationen vorverarbeitet werden müssen, wenn milliarden Datenpunkte zu wenigen tausend umgewandelt werden sollen, sind selbstorganisierende Karten von Bedeutung. Sie gruppieren Daten, um Auffälligkeiten und Muster in der Verteilung dieser aufzudecken. Weil selbstorganisierende Karten jedoch so viele Daten verarbeiten müssen, lohnt es sich auch, diese besonders effizient zu gestalten. Wie kann man also eine selbstorganisierende Karte simulieren, ohne unnötige Rechenzeit zu verbrauchen?
 
@@ -133,7 +136,9 @@ Das wichtigste Stichwort zur Antwort auf diese Frage ist Minimalismus. Unnötige
 
 \begin{enumerate}
 \item Prototypen. Die wichtigsten Informationen, die diese tragen, sind ihre Repräsentationspunkte im mehrdimensionalen Raum und ihre Position im Prototypenraum (also in der Kohonenkarte). Die Datenpunkte, mit denen die Prototypen eine Gruppe bilden, müssen nicht explizit in Verbindung mit den Prototypen gebracht werden, da man diese Verbindung auch nachträglich noch ausrechnen kann.
+
 \item Die Datenpunkte, da diese natürlich die wichtigsten Informationen enthalten. Sie tragen genauso wie die Prototypen eine Koordinate im mehrdimensionalen Raum.
+
 \item Eine \(\alpha\)-Funktion (bzw. Alphafunktion). Diese wird benötigt, um klarzustellen, wie stark die Prototypen durch die Datenpunkte beeinflusst werden können. Sie nimmt die Position des Gewinnerprototypen entgegen und ordnet dann jedem Prototypen die beeinflussbarkeit dessen zu.
 \end{enumerate}
 
@@ -147,6 +152,7 @@ Unser Programm, um welches es in dieser Arbeit geht, ist in Haskell geschrieben.
 
 \begin{enumerate}
 \item Keine Variable darf verändert werden. Dies ist einer der Grundsätze der funktionalen Programmierung, denn durch dieses Prinzip ist es formal egal, in welcher Reihenfolge Prozesse ausgeführt werden.
+
 \item Eine Funktion gibt bei gleichen Parametern gleiche Ausgaben aus. Mit anderen Worten sind (die meisten) Funktionen in Haskell daher \glqq{}pure\grqq{} und verursachen keine \glqq{}side-effects\grqq{}, interagieren also nicht mit der Außenwelt.
 \end{enumerate}
 
@@ -158,19 +164,53 @@ Für unser Programm brachten diese Umstände vor allem folgende Vorteile:
 
 \begin{enumerate}
 \item Die Schnelligkeit, die Haskell mit sich bringt, ist äußerst bedeutend. Weil eine selbstorganisierende Karte viele Daten verarbeiten muss, ist dieser Faktor nicht zu vernachlässigen.
+
 \item Haskell ist eine Programmiersprache, die sich in äußerst kurzer und prägnanter Form schreiben lässt. Dadurch ist es oftmals einfacher, den Überblick über ein in Haskell geschriebenes Programm zu behalten --- es bedeutet jedoch nicht, dass es einfacher ist, Programme in Haskell zu schreiben, denn es ist eine höhere Konzentration zum Schreiben dieser benötigt.
+
 \item Viele Datenstrukturen in Haskell sind wiederverwendbar: In den meisten objektorientierten Programmiersprachen trifft dies nicht zu. Stattdessen wird in jenen jede Datenstruktur für einen bestimmten Zweck verwendet, während Haskell darauf aufbaut, Datenstrukturen so abstrakt wie möglich zu halten.
+
 \item Haskells eigenes \glqq{}build system\grqq{}, cabal, ist in der Haskell Plattform erreichbar. Somit wird es für den Programmierer einfacher, Bibliotheken von Anderen (welche in großer Qualität und Zahl vorhanden sind) in das eigene Programm einzubinden.
+
 \item Schließlich läuft Haskell auch auf den meisten Betriebssystemen (Windows, Linux, OSX, \dots{}); Da es jedoch nicht nur einen Compiler gibt und die Sprache Haskell letztendlich nur eine Konvention ist, kann sie auch nach Bedarf auf andere Betriebssysteme übertragen werden.
 \end{enumerate}
 
-Der Leser sei an dieser Stelle angehalten, sich mit der Syntax Haskells bekannt zu machen, sodass Programmbeispiele später nachvollzogen werden können.
+\section{Anwendug neuronaler Netze}
 
-\subsection{Funktionsweise des abstrakten Teils}
+\subsection{Individuelle Produktempfehlungen als Verkaufsförderndes Prinzip im Online-Handel}
 
-\subsection{Erweiterung auf unsere Anwendung / Anpassung des Programms}
+Mit der heutigen zunehmenden Verlagerung der Kaufumgebung in die digitale Welt des Online-Handels steigt auch der Bedarf nach individualisierter Kundenberatung und Ausgestaltung der Online-Shops. Die spezielle Anpassung an den einzelnen Besucher dient damit als eine verkaufsfördernde Maßnahme, die bereits bei einem großen Teil der Händler Anwendung findet.
 
-\subsection{Anwendung des Programms}
+Online-Shops dienen allein dazu, den Verkaufsumsatz eines Händlers weiter zu steigern. Diese Art des Shoppings ist für den Kunden die angenehmste, da er zum Erwerb des gesuchten Produktes nicht einen Laden aufsuchen muss, sondern es bequem von Zuhause aus bestellen kann. Außerdem ist das Sortiment eines Verkäufers so schneller einsehbar, was eventuelle Kaufwege für den Kunden erleichtern und verkürzen kann. Es existieren also für den Verbraucher genug Gründe, Online-Shops zu nutzen. Die Online-Branche boomt durch die neue Nachfrage und immer mehr Händler steigen, der Erfolgsaussicht wegen, auf diese Art der Vermarktung um.
+
+Es ist jedoch wichtig für die Anbieter, den Erfolg eines Online-Shops kalkulieren und damit kontrollieren zu können. Die dafür nötige Erfolgsmessung besteht aus zwei Hauptkomponenten: Dem Traffic, welcher die Anzahl und Verweildauer der Besucher beschreibt, und die Conversion-Rate, die die Umwandlung von Besuchern bzw. Interessenten in Kunden angibt. Zur höchstmöglichen Optimierung dieser Faktoren gibt es viele verschiedene Strategien und Prinzipien, wie beispielsweise Qualitätssiegel oder Kundenbewertungen. Diese sollen den Besucher dazu bringen, sein Vertrauen in die Seriosität des Shops und die Qualität der Produkte zu steigern und ihn so zu einem aktiven Kunden zu machen.
+
+Eine sehr gebräuchliche und allgemein meistens genutzte Methode, um dies zu erreichen, sind Kundenberatungen. Ein Kundenberater kennt den Landen und die Produkte genau und kann sich auf den individuellen Kunden einstellen. Doch dies funktioniert nicht nur in begehbaren Geschäften, sondern ist auch mittlerweile in Online-Shops möglich. Produktempfehlungssysteme dienen dort dem (potenziellen) Kunden als virtueller Kaufberater, der bei der Auswahl der Produkte behilflich sein kann. Die gebotenen Empfehlungen werden dadurch optimiert, dass das System das Verhalten des Kunden lernt und so bessere Vorhersagen über dessen Geschmack treffen kann. Zusätzlich analysiert es das Verhalten der anderen Kunden,  kann Parallelen zwischen den Interessen und dem Verhalten erkennen und die damit verbundenen Erfahrungen in die Kaufberatung einfließen lassen (siehe Kapitel 5.3, „Datenanalyse“). Da dies in Echtzeit geschieht, wird die Wirkung der Empfehlungen verbessert und der Warenkorb vergrößert.
+
+Als Fazit lässt sich sagen, dass Empfehlungssysteme ein sehr effektives Vermarktungsmittel in Online-Shops darstellen. Sie wirken sich vermutlich am meisten auf die Wahrnehmung und damit die Kaufentscheidung der Kunden aus, da die individuell auf das Verhalten des Kunden abgestimmten Empfehlungen und die Anpassungsfähigkeit in Echtzeit von dem Kunden als besonders hilfreich angesehen werden. Damit wirkt sich das Verfahren auch positiv auf die Größe des Warenkorbes des Käufers aus.
+
+\subsection{Weitere Anwendungsmöglichkeiten neuronaler Netze}
+
+\subsubsection{Mustererkennung}
+
+Die Mustererkennung ist ein sehr vielfältiger sowie anspruchsvoller Bereich für die Anwendung von künstlichen neuronalen Netzen, der uns nicht nur im Alltag häufig begegnet. Ein Teilbereich dessen ist beispielsweise die automatische Gesichtserkennung. Der komplexe neurologische Vorgang, sich das Gesicht anderer Personen merken und wiedererkennen  zu können, begleitet uns schon von klein auf durch den Alltag und erscheint ganz selbstverständlich. Doch mittlerweile wird diese Fähigkeit auch in der Computerbranche verlangt und kann mithilfe von künstlichen neuronalen Netzen verwirklicht werden. Sie werden eingesetzt um unterschiedliche Ansichten eines Gesichts zu verknüpfen und einer bestimmten Person zuzuordnen, um dann durch Selbstorganisation Klassen zu bilden. Fehlertoleranz und Generalisierungsfähigkeit sind dabei enorm wichtig, da Ausrichtung, Position oder Beleuchtung des Gesichts variieren können. Doch nicht nur die Gesichtserkennung sondern zum Beispiel auch Fingerabdruck-, Handschrift- und Spracherkennung finden schon in modernen Smartphones Anwendung.
+
+Eine weitere Anwendungsmöglichkeit findet die Mustererkennung in der Medizin. Dort dient sie als Unterstützung in der Diagnostik oder der Interpretation von EKG, EEG, Röntgen-, Ultraschall- oder Computertomographiebildern.
+
+\subsubsection{Prognosen}
+
+Um wirtschaftliche Prognosen stellen zu können ist es notwendig, ein Modell eines Bereiches zu erstellen um künftige Vorhersagen über dessen Entwicklung treffen zu können. Selbst wenn dabei bekannt ist, von welchen Faktoren die Entwicklung  abhängig ist, ist es oft schwierig oder sogar nicht möglich die Gesamtheit der Abhängigkeiten zu analysieren und somit eventuelle Entwicklungen zu prognostizieren. Damit sind beispielsweise Kursverläufe in der Wirtschaft wahrscheinlich gar nicht vorhersagbar. Jedoch scheinen künstliche neuronale Netze im Vergleich zu bisher verwendeten Verfahren für Prognosestellungen besser geeignet zu sein, da sie generalisierungsfähig sind und sich selbst organisieren.
+
+\subsubsection{Datenanalysen}
+
+Neuronale Netze können in der betrieblichen Anwendung als Klassifikations- und Entscheidungsstütze genutzt werden. Anders als in der Prognose dienen sie hier nicht dazu, einen Ausschnitt der Wirklichkeit zu simulieren, um damit Ereignisse Vorhersagen zu können, sondern eine Menge gesammelter Daten zu analysieren und zu ordnen, um beispielsweise resultierende Empfehlungen anzubieten. Auf diese Art und Weise arbeiten und funktionieren auch Empfehlungssysteme in Online-Shops. Sie sammeln die Daten über das Nutzerverhalten, zum Beispiel, welche Produkte häufig in Kombination angesehen oder gekauft werden, und können dem Kunden daran anknüpfende Empfehlungen anbieten. Diese Funktion erscheint in Online-Shops schon selbstverständlich, man ist an die „Das könnte Ihnen auch gefallen:“-Leiste oder an das „Andere Kunden kauften auch:“-Kästchen längst gewöhnt.
+
+Ein weiteres Beispiel für die Anwendungsmöglichkeiten ist die Kreditwürdigkeitsanalyse. Diese Entscheidung erfolgt nur teilweise objektiv, da die Beurteilung in der Regel durch Sachbearbeiter vorgenommen wird. Dabei ist sie von den jeweiligen subjektiven Kriterien abhängig, die die Sachbearbeiter in ihrer Berufserfahrung entwickelt haben, und von den Mangel an Kenntnis des Zusammenhangs zwischen Kriterien und Entscheidung. Da jedoch Fehlentscheidungen finanziell negative Folgen nach sich ziehen, liegt es im Interesse des Kreditgebers, diesen Aufgabenbereich soweit wie möglich zu objektivieren. Der Sinn eines Entscheidungssystems, das auf einem künstlichen neuronalen Netz beruht, ist es, eine Objektivierung der Entscheidung vorzunehmen. Es soll möglich gemacht werden, dass die Sachbearbeiter ihre Wahl auf der Basis des gleichen Wissensstandes treffen können. Somit würde auch die Anzahl der Fehlentscheidungen gesenkt werden.
+
+\subsubsection{Optimierung}
+
+Bei einem Optimierungsproblem ist es Ziel, dieses nach Möglichkeit in einen optimal nutzbaren Zustand umzuwandeln. Dabei wird dieses meist durch eine Zielfunktion und mehrere Nebenbedingungen beschrieben. Eine Menge von Variablen beschreiben zusätzlich dessen Zustände. In der betrieblichen Anwendung können Verfahren wie das Simplex-Verfahren, zur Lösung linearer Optimierungsprobleme, die Branch-and-Bound-Methode, zur Lösung ganzzahliger Optimierungsprobleme, aber auch neuronale Netze angewandt werden.
+
+Ein Anwendungsbeispiel stellt die Planung der Maschinenbelegung in der Produktion dar. Gegeben ist die Produktionsumgebung, die aus den Betriebsmitteln beziehungsweise Betriebsmittelgruppen besteht, eine Menge von Fertigungsaufträgen, sowie die verschiedenen Arbeitsgänge, die für eine Fertigung erforderlich sind. Gesucht ist nun eine optimale Planung, die die Zuordnung der Fertigungsaufträge und der jeweiligen notwendigen Arbeitsgänge zu den Betriebsmitteln, in der erforderlichen Reihenfolge, beschreibt. Zu dieser Problemlösung kann beispielsweise ein Hopfield-Netz genutzt werden. Dies ist ein besonderes künstliches neuronales Netz, das allgemein dazu fähig ist, (teilweise) verloren gegangene Muster oder Strukturen zu rekonstruieren.
 
 \end{document}
 
