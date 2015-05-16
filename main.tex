@@ -56,8 +56,7 @@
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 
-\usepackage{texments}
-\usestyle{colorful}
+\usepackage{minted}
 
 % --- LITTLE TWEAKS ---
 
@@ -67,6 +66,7 @@
 \renewcommand{\thesection}{\Roman{section}}
 \renewcommand{\thesubsection}{\arabic{subsection}}
 
+\newcommand{\haskell}[1]{\mintinline{haskell}|#1|}
 \newcommand{\commonlettrine}[1]{\lettrine[nindent=0em,lines=2]{#1}}
 
 % --- DOCUMENT INFORMATION ---
@@ -172,6 +172,18 @@ Für unser Programm brachten diese Umstände vor allem folgende Vorteile:
 \item Haskells eigenes \glqq{}build system\grqq{}, cabal, ist in der Haskell Plattform erreichbar. Somit wird es für den Programmierer einfacher, Bibliotheken von Anderen (welche in großer Qualität und Zahl vorhanden sind) in das eigene Programm einzubinden.
 
 \item Schließlich läuft Haskell auch auf den meisten Betriebssystemen (Windows, Linux, OSX, \dots{}); Da es jedoch nicht nur einen Compiler gibt und die Sprache Haskell letztendlich nur eine Konvention ist, kann sie auch nach Bedarf auf andere Betriebssysteme übertragen werden.
+\end{enumerate}
+
+\subsection{Das Programm \glqq{}SOMC.hs\grqq{}}
+
+Das Wissen über selbstorganisierende Karten wurde in einem Programm umgesetzt, welches aus historischen Gründen den Namen SOMC.hs trägt. Die API-Dokumentation ist auf englisch unter \url{sammex.github.io/project-som/SOMC.html} erhältlich. Weil es nicht von Nutzen wäre, diese hier zu wiederholen, soll hauptsächlich auf die Ideen und Funktionsweisen des Programmes eingegangen werden.
+
+Am wichtigsten ist ganz eindeutig die Funktion \haskell{epoch}, da diese eine Iteration über eine selbstorganisierende Karte tätigt: Dabei wird für jeden Datenpunkt der näheste Prototyp bestimmt (siehe \haskell{getWinner}) und dann darauf basierend die Prototypen aktualisiert (siehe \haskell{updateWinner}). Die \haskell{epoch}-Funktion ist ein grundlegender, wenn auch nicht komplexer Baustein für das Programm. Die \haskell{train}-Funktion ist auf ihr aufgebaut; Diese wiederholt \haskell{epoch} immer wieder. Dabei sollen sich allerdings die \(\alpha\)-Werte ändern, weil die Prototypen zu den beginnenden Iterationen sehr stark verschoben werden sollen, um sich gleichmäßig zu verteilen, aber später weniger, damit sie akkurate Gruppen bilden. Insgesamt ist es sinnvoll, verschiedene Werte über die Iterationen zu verändern: So z.B. den Radius, in dem die Prototypen aktualisiert werden; Oder der \(\alpha\)-Wert über die verschiedenen Radii: Prototypen, welche im Prototypenraum in einem bestimmten Abstand zueinander sind, sollen auch angemessen verschoben werden, wenn einer der beiden am nächsten zu einem Datenpunkt ist. Um sowohl die Bibliothek im Programm benutzerfreundlicher zu machen und Boilerplate-Code zu reduzieren, haben wir deshalb folgenden Ansatz an das Problem der Konfiguration verschiedener Verteilungen gewählt: Die Paradigmen der funktionalen Programmierung. Das bedeutet in diesem Sinne, dass Funktionen miteinander kombiniert werden. So konnten wir ein Gerüst schaffen:
+
+\begin{enumerate}
+\item Alpha-Funktionen sind diejenigen Funktionen, in die alle darauf folgenden eingespeist werden. Sie selbst beschreiben den Verlauf des Gewinner-Alphas über die Iterationen, was bedeuten soll, dass sie \emph{Richtwerte} für später aufgerufene Funktionen liefern. Betrachten wir als Beispiel \haskell{quadraticAlpha}: Als Argumente nimmt es --- neben den ersten beiden Argumenten, welche in den nächsten Punkten geklärt werden --- einen Anfangs-Alpha-Wert entgegen, dann die Anzahl der Trainingsdurchläufe, die die selbstorganisierende Karte erfahren wird, dann die Nummer des aktuellen Trainingsdurchlaufes (\emph{da die \haskell{quadraticAlpha} in \haskell{train} aufgerufen wird (!)}) und schließlich die Position des gewinnenden Prototyps in einer Iteration und die Position eines Prototyps, dessen Alpha- bzw. Verschiebungswert berechnet werden soll.
+
+\item 
 \end{enumerate}
 
 \section{Anwendug neuronaler Netze}
