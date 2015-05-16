@@ -18,7 +18,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass[twoside,a4paper,draft]{article}
+\documentclass[twoside,a4paper]{article}
 
 % --- DOC CONFIG ---
 
@@ -33,6 +33,7 @@
 \usepackage{booktabs}
 \usepackage{float}
 \usepackage{hyperref}
+\usepackage{subfigure}
 
 \usepackage{lettrine}
 \usepackage{paralist}
@@ -183,8 +184,51 @@ Am wichtigsten ist ganz eindeutig die Funktion \haskell{epoch}, da diese eine It
 \begin{enumerate}
 \item Alpha-Funktionen sind diejenigen Funktionen, in die alle darauf folgenden eingespeist werden. Sie selbst beschreiben den Verlauf des Gewinner-Alphas über die Iterationen, was bedeuten soll, dass sie \emph{Richtwerte} für später aufgerufene Funktionen liefern. Betrachten wir als Beispiel \haskell{quadraticAlpha}: Als Argumente nimmt es --- neben den ersten beiden Argumenten, welche in den nächsten Punkten geklärt werden --- einen Anfangs-Alpha-Wert entgegen, dann die Anzahl der Trainingsdurchläufe, die die selbstorganisierende Karte erfahren wird, dann die Nummer des aktuellen Trainingsdurchlaufes (\emph{da die \haskell{quadraticAlpha} in \haskell{train} aufgerufen wird (!)}) und schließlich die Position des gewinnenden Prototyps in einer Iteration und die Position eines Prototyps, dessen Alpha- bzw. Verschiebungswert berechnet werden soll.
 
-\item 
+\begin{figure}
+\centering
+\includegraphics[width=0.4\textwidth]{src/quadAlph.png}
+\caption{Der Verlauf der quadraticAlpha-Funktion über Iterationen.}
+\end{figure}
+
+\item Das erste Argument einer \haskell{...Alpha}-Funktion ist die Verteilung des Radius' über Iterationen: Man beachte dabei den Typ \haskell{Int -> Int ->}, welcher sowohl in der Typsignatur des Arguments als auch in der der \haskell{...Alpha}-Funktion vorkommt; Tatsächlich hat dieser immer die gleiche Bedeutung, nämlich \haskell{Anzahl der Iteration -> Aktuelle Iteration -> Int}. Dabei ist der Rückgabewert gleich dem Radius, der in der aktuellen Iteration verwendet werden soll.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.4\textwidth]{src/sqRad.png}
+\caption{Der Radius, welcher von der \haskell{squareRadius}-Funktion generiert wird, in Abhängigkeit von den Iterationen.}
+\end{figure}
+
+\item Das zweite Argument einer \haskell{...Alpha}-Funktion ist vom Typ \haskell{Int -> Double -> Vec Int ->} \haskell{Vec Int -> Double}, was gleichzusetzen ist mit \haskell{Radius -> Alpha In Der Iteration ->} \haskell{Gewinner-Prototyp-Position ->} \haskell{Zu Verschiebender Prototyp -> Alpha-Wert}. Grundstein dieser Funktion ist eine Interpretation des Prototypenraums, d.h., eine Funktion, welche den Koordinaten von zwei Prototypen einen Radius zuordnen kann. Ein Beispiel hierfür ist die \haskell{squareInterpretation}, welche die Verteilung der Prototypen auf klassischen quadratischen Teilen annimmt, aber auch andere Interpretationen wie etwa eine hexagonale, bei der Prototypen auch versetzt dargestestellt werden, sind möglich.
+
+\item Damit eine Interpretation des Prototypenraumes komplett ist, benötigt sie Informationen darüber, wie sich das Alpha verändern soll, wenn der Abstand von einem Prototyp zum Gewinner größer wird. Diese Information wird von Funktionen wie der \haskell{squareRadiusDistribution} gegeben; Dabei sind die Argumente dieser der Alpha-Wert des Gewinner-Prototypen, der maximal mögliche Radius zum Gewinner-Prototypen, bei dem ein Prototyp trotzdem noch verschoben wird, und der Abstand vom momentan zu verschiebendem Prototyp zum Gewinner-Prototyp. Die \haskell{squareRadiusDistribution} an sich verfolgt ein äquivalentes Muster wie \haskell{squareRadius} und \haskell{quadraticAlpha}; Tatsächlich sind die genutzten Gleichung identisch.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.4\textwidth,height=0.2\textheight,keepaspectratio]{src/sqRadDistr.png}
+\caption{Der Verlauf des Alpha-Werts bei größerem Abstand zum Gewinner-Prototyp mit der \haskell{squareRadiusDistribution}.}
+\end{figure}
 \end{enumerate}
+
+Wendet man diese Funktionen nun an, so kann sich als Argument für \haskell{train} nun etwas ergeben wie etwa \haskell{reversedAlpha (squareRadius 3)} \haskell{(squareInterpretation} \haskell{squareRadiusDistribution)} \haskell{0.3}. Nach kurzem Nachdenken sollte klar werden, wie dies zu interpretieren ist.
+
+Wir erweiterten unser Programm um eine graphische Seite, deren Funktionen zwar nicht erklärenswert, deren Ausgaben allerdings interessant für den Beweis der Funktion selbstorganisierender Karten sind. Abgesehen von den Alpha-Funktionen wurde dazu immer die bereits oben kreierte genutzt, in 100 Trainingsdurchläufen.
+
+\begin{figure}
+\centering
+\subfigure[Gruppierung mit \haskell{linearAlpha}]{
+	\includegraphics[width=0.3\textwidth]{src/TestL/origMDCSGroups.png}
+	\includegraphics[width=0.3\textwidth]{src/TestL/finalMDCSGroups.png}
+}
+\subfigure[Gruppierung mit \haskell{quadraticAlpha}]{
+	\includegraphics[width=0.3\textwidth]{src/TestQ/origMDCSGroups.png}
+	\includegraphics[width=0.3\textwidth]{src/TestQ/finalMDCSGroups.png}
+}
+\subfigure[Gruppierung mit \haskell{reversedAlpha}]{
+	\includegraphics[width=0.3\textwidth]{src/TestR/origMDCSGroups.png}
+	\includegraphics[width=0.3\textwidth]{src/TestR/finalMDCSGroups.png}
+}
+\caption{Verschiedene Gruppierungen zufällig generierter Daten. Jeweils links: Vor der Anwendung, rechts: Danach; Man beachte die Gruppen, die anfangs sehr klein bzw. ungleichmäßig verteilt sind und später durch die selbstorganisierende Karte ausgeweitet wurden, oder auch die neue Farbanordnung.}
+\end{figure}
 
 \section{Anwendug neuronaler Netze}
 
