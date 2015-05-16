@@ -522,9 +522,9 @@ pixelGroupColor scale x y l = let fl = filter (
 
 main :: IO ()
 main = do {
-    let {gCount = 4};
-    let {pCount = 750};
-    let {scale = 10};
+    let {gCount = 7};
+    let {pCount = 1000};
+    let {scale = 50};
     arg <- fmap head getArgs;
     putStrLn "Generating MDCS...";
     rmdcs <- randomMDCS gCount pCount 10.0 10.0;
@@ -543,7 +543,7 @@ main = do {
     putStrLn "Plotting original groups...";
     savePngImage (arg ++ "/origMDCSGroups.png") $ ImageRGB8 $ plot2DMDCSGroups grmdcs scale colrs;
     putStrLn "Sorting Points...";
-    trmdcs <- return $ force $ sortToGroups euclidDistance (fst rmdcs, train euclidDistance (linearAlpha (squareRadius 3) (squareInterpretation squareRadiusDistribution) 0.3) rmdcs 100);
+    trmdcs <- return $ force $ sortToGroups euclidDistance (fst rmdcs, train euclidDistance (reversedAlpha (squareRadius 3) (squareInterpretation reversedRadiusDistribution) 0.3) rmdcs 100);
     putStrLn "Plotting Points...";
     trmdcsPlot <- return $ force $ plot2DMDCSGroups trmdcs scale colrs;
     putStrLn "Saving Plot...";
