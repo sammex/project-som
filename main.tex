@@ -3,7 +3,7 @@
 % LaTeX Template
 % * <feldrandstudios@gmail.com> 2015-01-30T20:40:28.601Z:
 %
-% 
+%
 %
 % Version 1.3 (9/9/13)
 %
@@ -96,8 +96,6 @@ Our super duper cool abstract text...
 
 \tableofcontents
 
-\begin{multicols}{2}
-
 \section{Einleitung}
 
 \commonlettrine{J}eder kennt das Gefühl der Leere nach dem Lesen eines Buches. Welches Buch soll ich mir als nächstes vornehmen? Ein Buch des selben Autors? Oder doch lieber das Genre entscheiden lassen?
@@ -113,7 +111,7 @@ Um die Funktionsweise des Programmes gut nachvollziehen zu können, werden wir z
 
 Ein neuronales Netzwerk ist ein Netzwerk aus Neuronen, das heißt, die Neuronen sind miteinander über sogenannte Synapsen bzw. Gewichte verbunden (diese Begriffe werden Synonym verwendet). Die Synapsen verbinden die Ausgänge der Neuronen mit den Eingängen (meist) anderer Neuronen (es können manchmal auch Verbindungen von einem Neuron zu demselben vorhanden sein). Sie übertragen Daten, diese sind normalerweise rationale Zahlen (also Zahlen, die sich als Bruch darstellen lassen). Ein Neuron erhält nun folgende Eingaben: Die Daten, die andere Neuronen über die Synapsen zu ihm schicken, und die \glqq{}Gewichte\grqq{} dieser Synapsen --- dies sind Konstanten, die jeder Synapse zugeordnet werden können. Mit speziellen Funktionen kann das Neuron nun diese Daten verarbeiten und zu einem Wert kombinieren (mit Hilfe einer sogenannten Propagierungsfunktion), den es dann über seine Ausgabesynapsen ausgibt (dieser Wert wird durch die Aktivierungsfunktion berechnet). Da ein neuronales Netzwerk noch Eingaben von außen benötigt, um jene Eingaben zu verarbeiten, existieren Spezialfälle: So gibt es Eingabeneuronen, die lediglich das ausgeben (oder \glqq{}feuern\grqq{}), was man selbst bestimmt, ebenso wie Ausgabeneuronen, die ihre Ausgaben nicht wieder in das neuronale Netz einspeisen, sondern in die reale Welt ausgeben.
 
-Das Besondere an neuronalen Netzen ist, dass diese lernen können. Dazu gibt es spezielle Algorithmen, wie etwa den Backpropagation-Algorithmus: Dabei wird versucht, herauszufinden, wie man das neuronale Netz verbessern kann, indem man bestimmt, welches Neuron welchen \emph{Fehler} im neuronalen Netz verursacht hat. Man speist Eingaben, zu denen man die optimalen Ausgaben kennt, in das neuronale Netz ein und vergleicht die Ausgaben des neuronalen Netzes mit den erwarteten Ausgaben. Danach kann man bestimmen, welches Neuron wie stark zu dem Unterschied zwischen gewünschten und tatsächlichen Ausgaben beigetragen hat und darauf basierend die Gewichte zwischen den Neuronen ändern. Da das neuronale Netz bei diesem Algorithmus nach einem vorgegebenem Ausgabemuster trainiert wird, lernt das Netz \glqq{}überwacht\grqq{}. 
+Das Besondere an neuronalen Netzen ist, dass diese lernen können. Dazu gibt es spezielle Algorithmen, wie etwa den Backpropagation-Algorithmus: Dabei wird versucht, herauszufinden, wie man das neuronale Netz verbessern kann, indem man bestimmt, welches Neuron welchen \emph{Fehler} im neuronalen Netz verursacht hat. Man speist Eingaben, zu denen man die optimalen Ausgaben kennt, in das neuronale Netz ein und vergleicht die Ausgaben des neuronalen Netzes mit den erwarteten Ausgaben. Danach kann man bestimmen, welches Neuron wie stark zu dem Unterschied zwischen gewünschten und tatsächlichen Ausgaben beigetragen hat und darauf basierend die Gewichte zwischen den Neuronen ändern. Da das neuronale Netz bei diesem Algorithmus nach einem vorgegebenem Ausgabemuster trainiert wird, lernt das Netz \glqq{}überwacht\grqq{}.
 
 Im Gegenteil dazu steht das unüberwachte Lernen. Dabei geht es oft darum, Daten zu gruppieren und einzuordnen. Zum Beispiel kann ein neuronales Netz, das unüberwacht lernt, mit den Bildern von Buchstaben trainiert werden und anschließend andere Bilder in diese Buchstabengruppen einsortieren.
 
@@ -143,15 +141,43 @@ Wie zu erkennen ist, ist die selbstorganisierende Karte im Wesen nicht sonderlic
 
 \section{Erklärung und Vorstellung des Programms}
 
+\subsection{Begründung der Wahl der Programmiersprache}
+
+Unser Programm, um welches es in dieser Arbeit geht, ist in Haskell geschrieben. Haskell ist eine funktionale Programmiersprache und somit sehr anders aufgebaut als imperative, objektorientierte Programmiersprachen. Funktionalität bedeutet:
+
+\begin{enumerate}
+\item Keine Variable darf verändert werden. Dies ist einer der Grundsätze der funktionalen Programmierung, denn durch dieses Prinzip ist es formal egal, in welcher Reihenfolge Prozesse ausgeführt werden.
+\item Eine Funktion gibt bei gleichen Parametern gleiche Ausgaben aus. Mit anderen Worten sind (die meisten) Funktionen in Haskell daher \glqq{}pure\grqq{} und verursachen keine \glqq{}side-effects\grqq{}, interagieren also nicht mit der Außenwelt.
+\end{enumerate}
+
+Dadurch entstehen allerdings Probleme bei In- und Output: Jede Funktion, die z.B. Eingaben vom Nutzer verarbeitet, ist \glqq{}impure\grqq{} (unrein), da ihre Ausgaben nicht nur von ihrer Parameterliste, sondern auch von der Außenwelt (dem Nutzer) abhängig sind. Haskell löst dieses Problem, indem jede Funktion, die Kontakt zur Außenwelt aufnimmt, markiert wird. Dies geschieht, indem Daten, die aus der Außenwelt stammen, in einem sogenanntem \glqq{}Monad\grqq{} verkapselt werden. Ein Monad ist eine Datenstruktur, deren Daten zwar weiter verarbeitet, aber nicht unbedingt aus dem Monad extrahiert werden können. Somit werden Daten, die durch In- und Output verursacht wurden (da es in Haskell keine Funktionen gibt, die nichts zurückgeben, da dies sinnlos wäre, geben auch Ausgabefunktionen etwas zurück) immer in einem \glqq{}IO-Monad\grqq{} gespeichert und können nicht wieder aus diesem extrahiert werden. Daher kann einfach bestimmt werden, ob eine Funktion mit der Außenwelt kommuniziert, indem die Typsignatur (besonders die Rückgabe der Funktion) beobachtet wird.
+
+Des weiteren verfolgt Haskell die Philosophie der \glqq{}lazy evaluation\grqq{}, wodurch Variablen erst dann ausgewertet werden, wenn sie auch benötigt werden (z.B. wenn eine Variable ausgegeben werden muss). Dadurch wird Rechenzeit gespart, da unbenötigte Ergebnisse auch nicht berechnet werden. Auch gibt es eine effiziente Umsetzung von Rekursivität in Haskell, was viele Funktionen vereinfacht und eleganter macht. Schließlich kompiliert der Haskell Compiler (in dieser Seminarfacharbeit wurde der am weitesten verbreitete Glasglow Haskell Compiler, oder GHC, verwendet) den Quellcode direkt in Assemblercode, wodurch, anders als bei Java, das Programm maschinenfreundlich --- und damit schneller --- ausgeführt wird.
+
+Für unser Programm brachten diese Umstände vor allem folgende Vorteile:
+
+\begin{enumerate}
+\item Die Schnelligkeit, die Haskell mit sich bringt, ist äußerst bedeutend. Weil eine selbstorganisierende Karte viele Daten verarbeiten muss, ist dieser Faktor nicht zu vernachlässigen.
+\item Haskell ist eine Programmiersprache, die sich in äußerst kurzer und prägnanter Form schreiben lässt. Dadurch ist es oftmals einfacher, den Überblick über ein in Haskell geschriebenes Programm zu behalten --- es bedeutet jedoch nicht, dass es einfacher ist, Programme in Haskell zu schreiben, denn es ist eine höhere Konzentration zum Schreiben dieser benötigt.
+\item Viele Datenstrukturen in Haskell sind wiederverwendbar: In den meisten objektorientierten Programmiersprachen trifft dies nicht zu. Stattdessen wird in jenen jede Datenstruktur für einen bestimmten Zweck verwendet, während Haskell darauf aufbaut, Datenstrukturen so abstrakt wie möglich zu halten.
+\item Haskells eigenes \glqq{}build system\grqq{}, cabal, ist in der Haskell Plattform erreichbar. Somit wird es für den Programmierer einfacher, Bibliotheken von Anderen (welche in großer Qualität und Zahl vorhanden sind) in das eigene Programm einzubinden.
+\item Schließlich läuft Haskell auch auf den meisten Betriebssystemen (Windows, Linux, OSX, \dots{}); Da es jedoch nicht nur einen Compiler gibt und die Sprache Haskell letztendlich nur eine Konvention ist, kann sie auch nach Bedarf auf andere Betriebssysteme übertragen werden.
+\end{enumerate}
+
+Der Leser sei an dieser Stelle angehalten, sich mit der Syntax Haskells bekannt zu machen, sodass Programmbeispiele später nachvollzogen werden können.
+
+Es folgen Beschreibungen von Bibliotheken, die benutzt wurden. Dies soll dazu dienen, dem Leser das Verstehen des Programms zu erleichtern.
+
+\subsubsection{Die Pipes-Bibliothek}
+
+\subsubsection{Die Criterion-Bibliothek}
+
 \subsection{Funktionsweise des abstrakten Teils}
 
 \subsection{Erweiterung auf unsere Anwendung / Anpassung des Programms}
 
 \subsection{Anwendung des Programms}
 
-\subsection{Repository des Programms auf BitBucket}
-
-\end{multicols}
 \end{document}
 
 % useful things:
