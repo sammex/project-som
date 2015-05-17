@@ -70,6 +70,8 @@
 \newcommand{\haskell}[1]{\mintinline{haskell}|#1|}
 \newcommand{\commonlettrine}[1]{\lettrine[nindent=0em,lines=2]{#1}}
 
+\renewcommand{\baselinestretch}{1.5}
+
 % --- DOCUMENT INFORMATION ---
 
 \title{\vspace{-15mm}\fontsize{24pt}{10pt}\selectfont\bfseries{}Buchempfehlungen mit Hilfe von selbstorganisierenden Karten erstellen}
@@ -87,13 +89,6 @@
 \thispagestyle{fancy}
 
 % --- BEGIN OF TEXT ---
-
-\begin{otherlanguage}{english}
-\begin{abstract}
-\noindent
-Our super duper cool abstract text...
-\end{abstract}
-\end{otherlanguage}
 
 \tableofcontents
 
@@ -132,7 +127,7 @@ Die selbstorganisierende Karte lernt, indem der Repräsentationspunkt eines Neur
 
 \subsection{Anwendung der Prinzipien der selbstorganisierenden Karte}
 
-Natürlich finden die oben beschriebenen Prinzipien auch in der Praxis Anwendung. Besonders, wenn Informationen vorverarbeitet werden müssen, wenn milliarden Datenpunkte zu wenigen tausend umgewandelt werden sollen, sind selbstorganisierende Karten von Bedeutung. Sie gruppieren Daten, um Auffälligkeiten und Muster in der Verteilung dieser aufzudecken. Weil selbstorganisierende Karten jedoch so viele Daten verarbeiten müssen, lohnt es sich auch, diese besonders effizient zu gestalten. Wie kann man also eine selbstorganisierende Karte simulieren, ohne unnötige Rechenzeit zu verbrauchen?
+\commonlettrine{N}atürlich finden die oben beschriebenen Prinzipien auch in der Praxis Anwendung. Besonders, wenn Informationen vorverarbeitet werden müssen, wenn milliarden Datenpunkte zu wenigen tausend umgewandelt werden sollen, sind selbstorganisierende Karten von Bedeutung. Sie gruppieren Daten, um Auffälligkeiten und Muster in der Verteilung dieser aufzudecken. Weil selbstorganisierende Karten jedoch so viele Daten verarbeiten müssen, lohnt es sich auch, diese besonders effizient zu gestalten. Wie kann man also eine selbstorganisierende Karte simulieren, ohne unnötige Rechenzeit zu verbrauchen?
 
 Das wichtigste Stichwort zur Antwort auf diese Frage ist Minimalismus. Unnötige Konstruktionen werden nicht gebraucht, also auch nicht umgesetzt. Daher muss man überlegen, welche Teile der Grundlagen vereinfachbar sind und welche nicht. Zum Beispiel muss man nicht jeden Prototypen als Neuron mit Propagierungs- und Aktivierungsfunktion sehen (da diese ja bei allen Prototypen gleich sind), man muss also nicht einmal ein Netz dieser simulieren. Was ist dann besonders wichtig für die selbstorganisierende Karte?
 
@@ -150,7 +145,7 @@ Wie zu erkennen ist, ist die selbstorganisierende Karte im Wesen nicht sonderlic
 
 \subsection{Begründung der Wahl der Programmiersprache}
 
-Unser Programm, um welches es in dieser Arbeit geht, ist in Haskell geschrieben. Haskell ist eine funktionale Programmiersprache und somit sehr anders aufgebaut als imperative, objektorientierte Programmiersprachen. Funktionalität bedeutet:
+\commonlettrine{U}nser Programm, um welches es in dieser Arbeit geht, ist in Haskell geschrieben. Haskell ist eine funktionale Programmiersprache und somit sehr anders aufgebaut als imperative, objektorientierte Programmiersprachen. Funktionalität bedeutet:
 
 \begin{enumerate}
 \item Keine Variable darf verändert werden. Dies ist einer der Grundsätze der funktionalen Programmierung, denn durch dieses Prinzip ist es formal egal, in welcher Reihenfolge Prozesse ausgeführt werden.
@@ -178,7 +173,7 @@ Für unser Programm brachten diese Umstände vor allem folgende Vorteile:
 
 \subsection{Das Programm \glqq{}SOMC.hs\grqq{}}
 
-Das Wissen über selbstorganisierende Karten wurde in einem Programm umgesetzt, welches aus historischen Gründen den Namen SOMC.hs trägt. Die API-Dokumentation ist auf englisch unter \url{sammex.github.io/project-som/SOMC.html} erhältlich. Weil es nicht von Nutzen wäre, diese hier zu wiederholen, soll hauptsächlich auf die Ideen und Funktionsweisen des Programmes eingegangen werden.
+\commonlettrine{D}as Wissen über selbstorganisierende Karten wurde in einem Programm umgesetzt, welches aus historischen Gründen den Namen SOMC.hs trägt. Die API-Dokumentation ist auf englisch unter \url{sammex.github.io/project-som/SOMC.html} erhältlich. Weil es nicht von Nutzen wäre, diese hier zu wiederholen, soll hauptsächlich auf die Ideen und Funktionsweisen des Programmes eingegangen werden.
 
 Am wichtigsten ist ganz eindeutig die Funktion \haskell{epoch}, da diese eine Iteration über eine selbstorganisierende Karte tätigt: Dabei wird für jeden Datenpunkt der näheste Prototyp bestimmt (siehe \haskell{getWinner}) und dann darauf basierend die Prototypen aktualisiert (siehe \haskell{updateWinner}). Die \haskell{epoch}-Funktion ist ein grundlegender, wenn auch nicht komplexer Baustein für das Programm. Die \haskell{train}-Funktion ist auf ihr aufgebaut; Diese wiederholt \haskell{epoch} immer wieder. Dabei sollen sich allerdings die \(\alpha\)-Werte ändern, weil die Prototypen zu den beginnenden Iterationen sehr stark verschoben werden sollen, um sich gleichmäßig zu verteilen, aber später weniger, damit sie akkurate Gruppen bilden. Insgesamt ist es sinnvoll, verschiedene Werte über die Iterationen zu verändern: So z.B. den Radius, in dem die Prototypen aktualisiert werden; Oder der \(\alpha\)-Wert über die verschiedenen Radii: Prototypen, welche im Prototypenraum in einem bestimmten Abstand zueinander sind, sollen auch angemessen verschoben werden, wenn einer der beiden am nächsten zu einem Datenpunkt ist. Um sowohl die Bibliothek im Programm benutzerfreundlicher zu machen und Boilerplate-Code zu reduzieren, haben wir deshalb folgenden Ansatz an das Problem der Konfiguration verschiedener Verteilungen gewählt: Die Paradigmen der funktionalen Programmierung. Das bedeutet in diesem Sinne, dass Funktionen miteinander kombiniert werden. So konnten wir ein Gerüst schaffen:
 
@@ -235,7 +230,7 @@ Wir erweiterten unser Programm um eine graphische Seite, deren Funktionen zwar n
 
 \subsection{Individuelle Produktempfehlungen als Verkaufsförderndes Prinzip im Online-Handel}
 
-Mit der heutigen zunehmenden Verlagerung der Kaufumgebung in die digitale Welt des Online-Handels steigt auch der Bedarf nach individualisierter Kundenberatung und Ausgestaltung der Online-Shops. Die spezielle Anpassung an den einzelnen Besucher dient damit als eine verkaufsfördernde Maßnahme, die bereits bei einem großen Teil der Händler Anwendung findet.
+\commonlettrine{M}it der heutigen zunehmenden Verlagerung der Kaufumgebung in die digitale Welt des Online-Handels steigt auch der Bedarf nach individualisierter Kundenberatung und Ausgestaltung der Online-Shops. Die spezielle Anpassung an den einzelnen Besucher dient damit als eine verkaufsfördernde Maßnahme, die bereits bei einem großen Teil der Händler Anwendung findet.
 
 Online-Shops dienen allein dazu, den Verkaufsumsatz eines Händlers weiter zu steigern. Diese Art des Shoppings ist für den Kunden die angenehmste, da er zum Erwerb des gesuchten Produktes nicht einen Laden aufsuchen muss, sondern es bequem von Zuhause aus bestellen kann. Außerdem ist das Sortiment eines Verkäufers so schneller einsehbar, was eventuelle Kaufwege für den Kunden erleichtern und verkürzen kann. Es existieren also für den Verbraucher genug Gründe, Online-Shops zu nutzen. Die Online-Branche boomt durch die neue Nachfrage und immer mehr Händler steigen, der Erfolgsaussicht wegen, auf diese Art der Vermarktung um.
 
@@ -268,6 +263,20 @@ Ein weiteres Beispiel für die Anwendungsmöglichkeiten ist die Kreditwürdigkei
 Bei einem Optimierungsproblem ist es Ziel, dieses nach Möglichkeit in einen optimal nutzbaren Zustand umzuwandeln. Dabei wird dieses meist durch eine Zielfunktion und mehrere Nebenbedingungen beschrieben. Eine Menge von Variablen beschreiben zusätzlich dessen Zustände. In der betrieblichen Anwendung können Verfahren wie das Simplex-Verfahren, zur Lösung linearer Optimierungsprobleme, die Branch-and-Bound-Methode, zur Lösung ganzzahliger Optimierungsprobleme, aber auch neuronale Netze angewandt werden.
 
 Ein Anwendungsbeispiel stellt die Planung der Maschinenbelegung in der Produktion dar. Gegeben ist die Produktionsumgebung, die aus den Betriebsmitteln beziehungsweise Betriebsmittelgruppen besteht, eine Menge von Fertigungsaufträgen, sowie die verschiedenen Arbeitsgänge, die für eine Fertigung erforderlich sind. Gesucht ist nun eine optimale Planung, die die Zuordnung der Fertigungsaufträge und der jeweiligen notwendigen Arbeitsgänge zu den Betriebsmitteln, in der erforderlichen Reihenfolge, beschreibt. Zu dieser Problemlösung kann beispielsweise ein Hopfield-Netz genutzt werden. Dies ist ein besonderes künstliches neuronales Netz, das allgemein dazu fähig ist, (teilweise) verloren gegangene Muster oder Strukturen zu rekonstruieren.
+
+\section{Zusammenfassung}
+
+\commonlettrine{I}m Rahmen unserer Seminarfacharbeit 2015 haben wir uns das Ziel gesetzt, ein auf neuronalen Netzen basierendes Programm für die Empfehlung von Büchern zu entwickeln. Als Leitgedanke diente uns dabei die Frage, welches Buch jemandem nach dem Lesen eines anderen Buches gefallen könnte. In diesem Rahmen beschäftigten wir uns mit der Funktionsweise und den Anwendungsmöglichkeiten  künstlicher neuronaler Netze. Insbesondere setzten wir uns mit Empfehlungssystemen auseinander, zu welchen auch unser Programmtyp zählt.
+
+In Kapitel 2.1 erläuterten wir die grundlegende Funktionsweise der im Programmteil verwendeten selbstorganisierenden Karten. Daran anknüpfend beschäftigte sich Kapitel 2.2 mit deren Anwendung und eventuellen Schwierigkeiten, die dabei entstehen können.
+
+In Kapitel 3 folgte die Vorstellung und Erklärung des erstellten Programms. Im Kapitel 3.1 erläutern wir zunächst, dass wir als Programmiersprache „Haskell“ auswählten, da diese funktional, schnell und ökonomisch sowie multikompatibel mit anderen Bibliotheken und Betriebssystemen ist. Diese Eigenschaften stellten sich, wie erwartet, als vorteilhaft für unser Programmziel heraus.
+
+Darauf folgte in Kapitel 4 die eigentliche Beschreibung und Erklärung des Programms und die Vorstellung der Website, welche für dessen Nutzung erstellt wurde. Für die Einteilung von Büchern in Cluster nutzen wir eine selbstorganisierende Karte, ein Typ eines neuronalen Netzes. Das Prinzip ist es, die Zentren von Gruppen zu finden. Wenn also Bücher als Punkte im mehrdimensionalen Raum dargestellt werden, so arbeitet man mit Prototypen, also Punkten (den zukünftigen Gruppenzentren) in diesem Raum. Für jeden Buchpunkt wird der Prototyp bestimmt, der ihm am nächsten ist und an den Buchpunkt angenähert. Im Endeffekt stellen die Prototypen eine Approximation der Gruppenzentren dar.
+
+ In den Kapiteln 5 und 6 gingen wir näher auf die Nutzungsmöglichkeiten von neuronalen Netzen ein, wobei sich Kapitel 5 vor allem auf die Handhabung von Empfehlungssystemen in der Online-Branche bezieht und Kapitel 6 anhand einiger Beispiele weitere Anwendungen für künstliche neuronale Netze aufzeigt. Die vielen Nutzungsmöglichkeiten, wie Mustererkennung, Prognose, Datenanalyse oder Optimierung, zeigten uns, wie vielseitig anwendbar neuronale Netze sind, und wie sehr sie uns, nicht zuletzt in unserem Konsumverhalten, beeinflussen können.
+
+Unser oberstes Ziel, die Erstellung eines Programmes, welches Bücher mithilfe von selbstorganisierenden Karten in Gruppen einteilt und Buchempfehlungen ausgibt, wurde erreicht. Das Programm wäre auch, zum Beispiel mit Hinblick auf die charakteristischen Eigenschaften der Bücher, noch erweiterbar. Die dazugehörige Website wurde ebenfalls fertiggestellt und ist für Besucher nutzbar. Auch die Wahl der Programmiersprache „Haskell“ enttäuschte uns nicht, so dass wir diese beibehielten. Der letzte geplante Teil der Arbeit, die Beschäftigung mit der realen Anwendung neuronaler Netze, wurde ebenfalls umgesetzt und das damit verbundene Ziel, deren Bedeutung für den Alltag zu erkennen, erreicht.
 
 \end{document}
 
