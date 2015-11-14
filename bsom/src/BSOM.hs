@@ -102,15 +102,11 @@ module Main (
 
 import Control.Monad
 import Control.DeepSeq
-import Codec.Picture
-import Data.Colour.RGBSpace
-import Data.Colour.RGBSpace.HSV
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Maybe as Maybe
 import Debug.Trace
 import qualified Data.Foldable as F
-import Data.Word
 import System.Environment
 import System.IO
 import System.Random
