@@ -60,18 +60,12 @@ prototype space will always be next to each other in data space, too.
 
 module BSOM (
     -- * Basic Types
-    Vec,
     DataPoint,
     DataSet,
     Prototype,
     (-@>),
     Prototypes,
     MDCS,
-    -- * Functions for working with Vectors
-    (>+),
-    (>-),
-    (>*),
-    absv,
     -- * Working with Multi-Dimensional Coordinate Systems
     -- ** Using Self-Organizing Memory Cards
     getWinner,
@@ -83,18 +77,6 @@ module BSOM (
     -- ** Auxiliary Functions
     -- $build
     euclidDistance,
-    -- *** Base Alpha Functions
-    quadraticAlpha,
-    reversedAlpha,
-    linearAlpha,
-    -- *** Prototype Space Interpretations
-    squareInterpretation,
-    independentInterpretation,
-    hexagonalInterpretation,
-    -- *** Epoch-Based Radius Functions
-    squareRadius,
-    -- *** Radius-Based Alpha Functions
-    squareRadiusDistribution
 ) where
 
 import Control.Monad
@@ -107,9 +89,11 @@ import qualified Data.Foldable as F
 import System.Environment
 import System.IO
 import System.Random
+import AlphaFunction
+import FieldInterpretation
+import ListVector
+import RadiusFunction
 
--- | This type assignment is used to provide more intuitive working with vectors.
-type Vec a = [a]
 -- | A point in multi-dimensional space.
 type DataPoint = Vec Double
 -- | A prototype in multi-dimensional space. It both uses a \"represenation
@@ -146,32 +130,6 @@ type MDCS = (DataSet, Prototypes)
 --  prototype position\".
 (-@>) :: [Double] -> [Int] -> Prototype
 (-@>) poi pos = Prototype poi pos
-
--- | Add two vectors. This is defined as @(>+) = zipWith (+)@.
-(>+) :: Num a => Vec a -> Vec a -> Vec a
-(>+) = zipWith (+)
-
--- | Subtract two vectors. This is defined as @(>-) = zipWith (-)@.
-(>-) :: Num a => Vec a -> Vec a -> Vec a
-(>-) = zipWith (-)
-
--- | Multiply vector by a scalar. This is defined as @(>*) x y = map (y *) x@.
-(>*) :: Num a => Vec a -> a -> Vec a
-(>*) x y = map (y *) x
-
--- | Length of vector, calculated using the euclidean distance.
-absv :: Floating a => Vec a -> a
-absv x = sqrt $ foldl (\s e -> s + e ^ (2 :: Int)) 0 x
-
-editNth :: (a -> a) -> Int -> [a] -> [a]
-editNth f 0 l = case l of
-                     [] -> []
-                     [x] -> [f x]
-                     (x:xs) -> f x : xs
-editNth f n l = if n <= 0 then l else case l of
-                     [] -> []
-                     [x] -> [x]
-                     (x:xs) -> x : editNth f (n-1) xs
 
 -- | Returns the prototype for which the given function returns the lowest value.
 getWinner :: (DataPoint -> DataPoint -> Double) -- ^ A function which takes the
@@ -283,81 +241,3 @@ train dist prad (dat, prot) count =
 --  function.
 euclidDistance :: DataPoint -> DataPoint -> Double
 euclidDistance a b = absv $ a >- b
-
--- | A function taking an alpha value returning a radius-based alpha function, as discussed
---  with the 'updateWinner' function. @independentRadius a w t@ returns @a@ if
---  @t == w@, and @0@ if @t /= w@. In other words, only the winning prototype is
---  updated with an alpha factor of @a@.
-independentInterpretation :: Double -> Vec Int -> Vec Int -> Double
-independentInterpretation alpha win test = if win == test then alpha else 0.0
-
--- | A radius interpretation using squares as prototype "tiles".
-squareInterpretation :: (Double -> Int -> Int -> Double) -> Int -> Double -> Vec Int -> Vec Int -> Double
-squareInterpretation distr rad alpha win test = let distance = maximum $ zipWith (\a b -> abs $ a - b) test win
-                                                in  if distance > rad then 0.0 else distr alpha rad distance
-
--- | A radius interpretation using hexagonal "tiles" for the prototypes.
-hexagonalInterpretation :: (Double -> Int -> Int -> Double) -> Int -> Double -> Vec Int -> Vec Int -> Double
-hexagonalInterpretation distr rad alpha win test = distr alpha rad (let (wx, wy) = takePair win
-                                                                        (tx, ty) = takePair test
-                                                                        dx = tx - wx
-                                                                        dy = ty - wy
-                                                                    in  if (signum dx) * (signum dy) == (-1) || (signum dx) * (signum dy) == 0 then (abs dx) + (abs dy) else max (abs dx) (abs dy))
-        where {takePair [] = (0, 0); takePair (x:[]) = (x, 0); takePair (x:y:_) = (x, y)}
-
--- | A epoch-based radius distribution using a quadratic function for underlying calculations.
-squareRadius :: Int -- ^ starting radius
-                -> Int -> Int -> Int
-squareRadius start count i = let a = fromIntegral start / (fromIntegral $ count ^ 2)
-                             in  round (a * (fromIntegral i - fromIntegral count) ^ 2 :: Double)
-
--- | A distribution of the alpha value throughout different radii. It can be
--- viewed as a graph of a parabola, whereas radii are noted on the x-axis and
--- alpha values are noted on the y-axis.
-squareRadiusDistribution :: (Double -> Int -> Int -> Double) -- ^ The final radius-based alpha distribution.
-squareRadiusDistribution alpha maxr actr = let x = fromIntegral actr
-                                               rm = fromIntegral maxr
-                                               a = alpha / (rm ^ 2)
-                                           in  if rm == 0.0 then alpha else a * (x - rm) ^ 2
-
-reversedRadiusDistribution :: (Double -> Int -> Int -> Double)
-reversedRadiusDistribution alpha _ actr = let x = fromIntegral actr
-                                          in  alpha / (x + 1)
-
--- | A epoch-based alpha distribution using quadratic functions for underlying calculations.
-quadraticAlpha :: (Int -> Int -> Int)
-                  -> (Int -> Double -> Vec Int -> Vec Int -> Double) -- ^ A function which takes a radius and an alpha value and
-                                                                     --  returns a radius-based alpha function.
-                  -> Double -- ^ A initial alpha value. It decreases quadratically, which
-                            -- means it starts to decrease slowly and then faster.
-                  -> Int
-                  -> Int
-                  -> Vec Int
-                  -> Vec Int
-                  -> Double
-quadraticAlpha radd radf a count i = let co = a / (fromIntegral count ^ 2)
-                                     in  radf (radd count i) $ co * (fromIntegral $ i - count) ^ 2
-
--- | This epoch-based alpha distribution is unique, because it does not depend
--- on the amount of training epochs, but rather decreases like @1/x@. The more
--- training samples there are, the more accurate are the results.
-reversedAlpha :: (Int -> Int -> Int)
-                 -> (Int -> Double -> Vec Int -> Vec Int -> Double)
-                 -> Double
-                 -> Int
-                 -> Int
-                 -> Vec Int
-                 -> Vec Int
-                 -> Double
-reversedAlpha radd radf a count i vf vc = radf (radd count i) (a / (fromIntegral i + 1)) vf vc
-
--- | This epoch-based alpha distribution uses a linearly decreasing alpha value.
-linearAlpha :: (Int -> Int -> Int)
-               -> (Int -> Double -> Vec Int -> Vec Int -> Double)
-               -> Double
-               -> Int
-               -> Int
-               -> Vec Int
-               -> Vec Int
-               -> Double
-linearAlpha radd radf a count i = radf (radd count i) ((-a) * (fromIntegral i) / (fromIntegral count) + a)
