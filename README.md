@@ -2,9 +2,8 @@
 
 ## How to run the code ##
 * install "The Haskell Platform" [here](https://www.haskell.org/platform/)
-* go to the directory "CODE"
-* type ``ghci``
-* now you can play with the code!
+* go to the directory `bsom`
+* run `stack install`
 
 ## What is this repository for? ##
 * grouping data
